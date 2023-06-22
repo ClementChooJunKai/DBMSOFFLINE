@@ -1,47 +1,94 @@
 {% include 'admin-layout.html' %}
 
-        <!-- Begin Page Content -->
-        <div class="container-fluid">
-
-          <!-- Page Heading -->
-          <h1 class="h3 mb-4 text-gray-800">Blank Page</h1>
-
-        </div>
-        <!-- /.container-fluid -->
-
-      </div>
-      <!-- End of Main Content -->
-
-      <!-- Footer -->
-      <footer class="sticky-footer bg-white">
-        <div class="container my-auto">
-          <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2019</span>
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <h1 class="h3 mb-4 text-gray-800">Edit Products</h1>
+          <!-- Delete Button -->
+   
+  <!-- Bootstrap Form -->
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-right mb-3">
+            <form action="/delete_product" method="POST" style="display: inline;">
+              <input type="hidden" name="id" value="{{ data[0][0] }}">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
           </div>
+          <h5 class="card-title">Form Title</h5>
+
+
+    
+
+
+          <form action="/update_product" method="POST">
+            <input type="hidden" name="id" value="{{ data[0][0] }}">
+            <div class="form-group">
+              <label for="ProductName">Product Name</label>
+              <input type="text" class="form-control" id="ProductName" placeholder="Edit Product Name" name="ProductName" value="{{ data[0][1] }}">
+            </div>
+            <div class="form-group">
+              <label for="ProductDescription">Product Description</label>
+              <input type="text" class="form-control" id="ProductDescription" placeholder="Edit Product Description" name="ProductDescription" value="{{ data[0][2] }}">
+            </div>
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="sellingPrice">Selling Price</label>
+                  <input type="text" class="form-control" id="sellingPrice" placeholder="Edit Selling Price" name="sellingPrice" value="{{ data[0][3] }}">
+                </div>
+                <div class="col-md-6">
+                  <label for="discountedPrice">Discount</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="discountedPrice" placeholder="Edit Discount" name="discountedPrice" value="{{ data[0][4] }}">
+                    <div class="input-group-append">
+                      <span class="input-group-text">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="Quantity">Quantity</label>
+              <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][9] }}">
+            </div>
+            <div class="form-group">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="freeShipping" name="freeShipping"  {% if data[0][9] == 'Shopee' %}checked{% endif %}>
+                <label class="form-check-label" for="freeShipping">Free Shipping</label>
+              </div>
+           
+            <button type="submit" class="btn btn-primary">Submit</button>
+           
+          </form>
         </div>
-      </footer>
-      <!-- End of Footer -->
-
-    </div>
-    <!-- End of Content Wrapper -->
-
+      </div>
+   
   </div>
-  <!-- End of Page Wrapper -->
+  <!-- End Bootstrap Form -->
+</div>
+<!-- /.container-fluid -->
 
-  <!-- Scroll to Top Button-->
-  <a class="scroll-to-top rounded" href="#page-top">
-    <i class="fas fa-angle-up"></i>
-  </a>
+<!-- End of Main Content -->
 
-  <!-- Bootstrap core JavaScript-->
-  <script src="static/vendor/jquery/jquery.min.js"></script>
-  <script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
 
-  <!-- Core plugin JavaScript-->
-  <script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+<!-- Bootstrap core JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}"></script>
+<script src="{{ url_for('static', filename='css/sb-admin-2.css') }}"></script>
 
-  <!-- Custom scripts for all pages-->
-  <script src="static/js/sb-admin-2.min.js"></script>
+<!-- Core plugin JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
 
 </body>
 
