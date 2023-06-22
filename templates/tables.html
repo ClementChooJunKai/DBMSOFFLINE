@@ -1,100 +1,105 @@
 {% include 'admin-layout.html' %}
 
-        <!-- Begin Page Content -->
-        <div class="container-fluid">
+<!-- Begin Page Content -->
+<div class="container-fluid">
 
-          <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Tables</h1>
-          <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below. For more information about DataTables, please visit the <a target="_blank" href="https://datatables.net">official DataTables documentation</a>.</p>
+  <!-- Page Heading -->
+  <h1 class="h3 mb-2 text-gray-800">Tables</h1>
+  <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below. For more information about DataTables, please visit the <a target="_blank" href="https://datatables.net">official DataTables documentation</a>.</p>
 
-          <!-- DataTales Example -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>StoreName</th>
-                      <th>StoreSlug</th>
-                      <th>StoreRating</th>
-                      <th>StoreChatPerformance</th>
-                      <th>Joined Date</th>
-                      <th>Products Count</th>
-                      <th>Reply Rate</th>
-                      <th>Followers</th>
-                      <th>Platform Type</th>
-                      <th>View</th>
-                      <th>Optimize</th>
-                   
-                      
-                    </tr>
-                  </thead>
-          
-                  <tbody>
-                    {% for row in data %}
-                    <tr>
-                        {% for item in row %}
-                            <td>{{ item }}</td>
-                        {% endfor %}
-                        <td><a href="/blank/{{ row[0] }}">View</a><td><a href="/compare/{{ row[0] }}">Optimize</a></td></td>
-                       
-                    </tr>
-                    
-                    {% endfor %}
-                    
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        <!-- /.container-fluid -->
-
-      </div>
-      <!-- End of Main Content -->
-
-      <!-- Footer -->
-      <footer class="sticky-footer bg-white">
-        <div class="container my-auto">
-          <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2019</span>
-          </div>
-        </div>
-      </footer>
-      <!-- End of Footer -->
-
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
     </div>
-    <!-- End of Content Wrapper -->
-
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Product Description</th>
+              <th>Selling Price</th>
+              <th>Discounted Price</th>
+              <th>Category</th>
+              <th>Quantity Sold</th>
+              <th>Product Likes</th>
+              <th>Product Rating</th>
+              <th>Product Rating Amount</th>
+              <th>Shipping Type</th>
+              <th>Shipping From</th>
+              <th>View</th>
+              <th>Optimize</th>
+        
+            </tr>
+          </thead>
+         
+          <tbody>
+            {% for row in data %}
+            <tr>
+              {% for item in row %}
+              <td class="truncate-cell">{{ item }}</td>
+              {% endfor %}
+              <td><a href="/blank/{{ row[0] }}">View</a></td>
+              <td><a href="/compare/{{ row[0] }}">Optimize</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-  <!-- End of Page Wrapper -->
 
-  <!-- Scroll to Top Button-->
-  <a class="scroll-to-top rounded" href="#page-top">
-    <i class="fas fa-angle-up"></i>
-  </a>
+</div>
+<!-- /.container-fluid -->
 
-  <!-- Bootstrap core JavaScript-->
-  <script src="static/vendor/jquery/jquery.min.js"></script>
-  <script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- Footer -->
+<footer class="sticky-footer bg-white">
+  <div class="container my-auto">
+    <div class="copyright text-center my-auto">
+      <span>Copyright &copy; Your Website 2019</span>
+    </div>
+  </div>
+</footer>
+<!-- End of Footer -->
 
-  <!-- Core plugin JavaScript-->
-  <script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+</div>
+<!-- End of Content Wrapper -->
 
-  <!-- Custom scripts for all pages-->
-  <script src="static/js/sb-admin-2.min.js"></script>
+</div>
+<!-- End of Page Wrapper -->
 
-  <!-- Page level plugins -->
-  <script src="static/vendor/datatables/jquery.dataTables.min.js"></script>
-  <script src="static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
 
-  <!-- Page level custom scripts -->
-  <script src="static/js/demo/datatables-demo.js"></script>
+<!-- Bootstrap core JavaScript-->
+<script src="static/vendor/jquery/jquery.min.js"></script>
+<script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="static/js/sb-admin-2.min.js"></script>
+
+<!-- Page level plugins -->
+<script src="static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="static/js/demo/datatables-demo.js"></script>
+
+<style>
+  .truncate-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust the maximum width as per your preference */
+  }
+</style>
 
 </body>
 

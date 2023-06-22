@@ -1,3 +1,4 @@
+import decimal
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 
@@ -25,15 +26,15 @@ def home():
 @app.route('/tables', methods=["GET"])
 def tables():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM store WHERE storename='somen.sg'")
+    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productrating,p.productratingamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = 'somen.sg';")
     fetchdata = cur.fetchall()
     stripped_data = [[str(item).strip() for item in row] for row in fetchdata]
     cur.close()
     return render_template("tables.html", data=stripped_data)
-@app.route('/blank/<id>')
-def view_store(id):
+@app.route('/blank/<int:product_id>', methods=['GET'])
+def view_store(product_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM store WHERE id = %s", (id,))
+    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productrating,p.productratingamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
     fetchdata = cur.fetchall()
 
     cur.close()
@@ -42,14 +43,14 @@ def view_store(id):
 @app.route('/delete_product', methods=['POST'])
 def delete_product():
     product_id = request.form.get('id')
-
+    print(product_id)
     # Connect to MySQL
     conn = mysql.connection
     cursor = conn.cursor()
 
     try:
         # Execute the delete query
-        query = "DELETE FROM store WHERE id = %s"
+        query = "DELETE FROM product WHERE productid = %s"
         cursor.execute(query, (product_id,))
         conn.commit()
         return redirect('/success')
@@ -71,14 +72,25 @@ def update_product():
     id = request.form['id']
     product_name = request.form['ProductName']
     product_description = request.form['ProductDescription']
-    selling_price = request.form['sellingPrice']
-    discounted_price = request.form['discountedPrice']
+    selling_price = decimal.Decimal(request.form['sellingPrice'])
+
+    discountPercentage = decimal.Decimal(request.form['discountPercentage'])
+    print(discountPercentage)
+    discounted_price = (selling_price*(100-discountPercentage))/100
     quantity = request.form['Quantity']
     free_shipping = request.form.get('freeShipping')  # Checkbox value
 
     # Perform the update operation using the retrieved data and the ID
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE store SET product_name = %s WHERE id = %s", (product_name, product_description, selling_price, discounted_price, quantity, free_shipping, id))
+    sql = "UPDATE product SET productName = %s, productDesc = %s, sellingprice = %s, discountedprice = %s, quantitysold = %s, shippingtype = %s WHERE productId = %s"
+    params = (product_name, product_description, selling_price, discounted_price, quantity, free_shipping, id)
+
+    print("SQL Statement:", sql)
+    print("Parameters:", params)
+
+    cur.execute(sql, params)
+    
+    print()
     mysql.connection.commit()
     cur.close()
 
