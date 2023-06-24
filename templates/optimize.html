@@ -52,38 +52,48 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Statistics Summary</h5>
-          <ul class="list-group">
-            <li class="list-group-item">
-              Average Selling Price: <span id="averageSellingPrice"></span>
-            </li>
-            <li class="list-group-item">
-              Average Discounted Price: <span id="averageDiscountedPrice"></span>
-            </li>
-            <li class="list-group-item">
-              Highest Selling Price: <span id="highestSellingPrice"></span>
-            </li>
-            <li class="list-group-item">
-              Lowest Discounted Price: <span id="lowestDiscountedPrice"></span>
-            </li>
-          </ul>
-        </div>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Statistics Summary</h5>
+        <ul class="list-group">
+          <li class="list-group-item">
+            Average Selling Price: <span id="averageSellingPrice"></span>
+          </li>
+          <li class="list-group-item">
+            Average Discounted Price: <span id="averageDiscountedPrice"></span>
+          </li>
+          <li class="list-group-item">
+            Highest Selling Price: <span id="highestSellingPrice"></span>
+          </li>
+          <li class="list-group-item">
+            Lowest Discounted Price: <span id="lowestDiscountedPrice"></span>
+          </li>
+          <li class="list-group-item">
+            Most Used Word: <span id="mostUsedWord"></span>
+          </li>
+        </ul>
       </div>
     </div>
-  </div>
 
   <!-- Chart Container -->
   <div class="row justify-content-center mt-4">
+    <h2>Top 10 Prices</h2>
     <div class="col-md-12">
       <canvas id="priceChart"></canvas>
     </div>
   </div>
 
+
+
+  <!-- Bar Chart Container -->
+  <div class="row justify-content-center mt-4">
+    <h2>Common Keywords</h2>
+    <div class="col-md-12">
+      
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
 </div>
-<!-- /.container-fluid -->
 
 <!-- Scroll to Top Button -->
 <a class="scroll-to-top rounded" href="#page-top">
@@ -104,6 +114,9 @@
 
 <!-- Line chart generation script -->
 <script>
+
+
+  
   // Calculate average selling price
   function calculateAverageSellingPrice(priceData) {
     var total = 0;
@@ -144,28 +157,56 @@
     return lowest.toFixed(2);
   }
 
-  // Get the price data from the server
-  var priceData = [
-    {% for item in price %}{
-        sellingPrice: {{ item[0] }},
-        discountedPrice: {{ item[1] }},
-        productRatings: {{ item[2] }}
-      }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
 
-  // Calculate statistics
-  var averageSellingPrice = calculateAverageSellingPrice(priceData);
-  var averageDiscountedPrice = calculateAverageDiscountedPrice(priceData);
-  var highestSellingPrice = calculateHighestSellingPrice(priceData);
-  var lowestDiscountedPrice = calculateLowestDiscountedPrice(priceData);
+  function calculateMostUsedWords(keywordData, topCount) {
+  // Sort the keyword data based on the count in descending order
+  keywordData.sort(function(a, b) {
+    return b.count - a.count;
+  });
 
-  // Display statistics
-  document.getElementById('averageSellingPrice').innerHTML = averageSellingPrice;
-  document.getElementById('averageDiscountedPrice').innerHTML = averageDiscountedPrice;
-  document.getElementById('highestSellingPrice').innerHTML = highestSellingPrice;
-  document.getElementById('lowestDiscountedPrice').innerHTML = lowestDiscountedPrice;
+  // Get the top N words
+  var topWords = keywordData.slice(0, topCount);
 
+  // Extract only the keyword values
+  var mostUsedWords = topWords.map(function(item) {
+    return item.keyword;
+  });
+
+  return mostUsedWords;
+}
+
+// Get the price data from the server
+var priceData = [
+  {% for item in price %}{
+      sellingPrice: {{ item[0] }},
+      discountedPrice: {{ item[1] }},
+      productRatings: {{ item[2] }}
+    }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+// Get the keyword data from the server
+var keywordData = [
+  {% for item in keywords %}{
+      keyword: "{{ item[0] }}",
+      count: {{ item[1] }}
+    }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+// Calculate statistics
+var mostUsedWords = calculateMostUsedWords(keywordData, 5);
+var averageSellingPrice = calculateAverageSellingPrice(priceData);
+var averageDiscountedPrice = calculateAverageDiscountedPrice(priceData);
+var highestSellingPrice = calculateHighestSellingPrice(priceData);
+var lowestDiscountedPrice = calculateLowestDiscountedPrice(priceData);
+
+// Display statistics
+document.getElementById('averageSellingPrice').innerHTML = averageSellingPrice;
+document.getElementById('averageDiscountedPrice').innerHTML = averageDiscountedPrice;
+document.getElementById('highestSellingPrice').innerHTML = highestSellingPrice;
+document.getElementById('lowestDiscountedPrice').innerHTML = lowestDiscountedPrice;
+document.getElementById('mostUsedWord').innerHTML = mostUsedWords.join(', ');
   // Line chart generation
   var ctx = document.getElementById('priceChart').getContext('2d');
   var chart = new Chart(ctx, {
@@ -212,6 +253,48 @@
             display: true,
             text: 'Price'
           }
+        }
+      }
+    }
+  });
+
+  
+// Bar chart generation
+  var ctx2 = document.getElementById('barChart').getContext('2d');
+  var chart2 = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: keywordData.map(function(item) {
+        return item.keyword;
+      }),
+      datasets: [
+        {
+          label: 'Keyword Count',
+          data: keywordData.map(function(item) {
+            return item.count;
+          }),
+          backgroundColor: 'rgba(75, 192, 192, 0.8)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Keywords'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Count'
+          },
+          beginAtZero: true
         }
       }
     }
