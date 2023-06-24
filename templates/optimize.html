@@ -1,0 +1,219 @@
+{% include 'admin-layout.html' %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <h1 class="h3 mb-4 text-gray-800">Edit Products</h1>
+
+  <!-- Bootstrap Form -->
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title"></h5>
+
+          <form action="/update_product" method="POST">
+            <input type="hidden" name="id" value="{{ data[0][0] }}">
+
+            <div class="form-group">
+              <label for="ProductName">Product Name</label>
+              <input type="text" class="form-control" id="ProductName" placeholder="Edit Product Name" name="ProductName" value="{{ data[0][1] }}" readonly>
+            </div>
+
+            <div class="form-group">
+              <label for="ProductDescription">Product Description</label>
+              <input type="text" class="form-control" id="ProductDescription" placeholder="Edit Product Description" name="ProductDescription" value="{{ data[0][2] }}" readonly>
+            </div>
+
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="sellingPrice">Selling Price</label>
+                  <input type="text" class="form-control" id="sellingPrice" placeholder="Edit Selling Price" name="sellingPrice" value="{{ data[0][3] }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="discountedPrice">Discounted Price</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="discountedPrice" placeholder="Edit Discounted Price" name="discountedPrice" value="{{ data[0][4] }}" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="Quantity">Amount Sold</label>
+              <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][6] }}" readonly>
+            </div>
+
+            <!-- Add any additional form fields as needed -->
+
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Statistics Summary</h5>
+          <ul class="list-group">
+            <li class="list-group-item">
+              Average Selling Price: <span id="averageSellingPrice"></span>
+            </li>
+            <li class="list-group-item">
+              Average Discounted Price: <span id="averageDiscountedPrice"></span>
+            </li>
+            <li class="list-group-item">
+              Highest Selling Price: <span id="highestSellingPrice"></span>
+            </li>
+            <li class="list-group-item">
+              Lowest Discounted Price: <span id="lowestDiscountedPrice"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Container -->
+  <div class="row justify-content-center mt-4">
+    <div class="col-md-12">
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
+
+</div>
+<!-- /.container-fluid -->
+
+<!-- Scroll to Top Button -->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Bootstrap core JavaScript -->
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}"></script>
+<script src="{{ url_for('static', filename='css/sb-admin-2.css') }}"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom scripts for all pages -->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+<!-- Line chart generation script -->
+<script>
+  // Calculate average selling price
+  function calculateAverageSellingPrice(priceData) {
+    var total = 0;
+    for (var i = 0; i < priceData.length; i++) {
+      total += priceData[i].sellingPrice;
+    }
+    return (total / priceData.length).toFixed(2);
+  }
+
+  // Calculate average discounted price
+  function calculateAverageDiscountedPrice(priceData) {
+    var total = 0;
+    for (var i = 0; i < priceData.length; i++) {
+      total += priceData[i].discountedPrice;
+    }
+    return (total / priceData.length).toFixed(2);
+  }
+
+  // Calculate highest selling price
+  function calculateHighestSellingPrice(priceData) {
+    var highest = 0;
+    for (var i = 0; i < priceData.length; i++) {
+      if (priceData[i].sellingPrice > highest) {
+        highest = priceData[i].sellingPrice;
+      }
+    }
+    return highest.toFixed(2);
+  }
+
+  // Calculate lowest discounted price
+  function calculateLowestDiscountedPrice(priceData) {
+    var lowest = Infinity;
+    for (var i = 0; i < priceData.length; i++) {
+      if (priceData[i].discountedPrice < lowest) {
+        lowest = priceData[i].discountedPrice;
+      }
+    }
+    return lowest.toFixed(2);
+  }
+
+  // Get the price data from the server
+  var priceData = [
+    {% for item in price %}{
+        sellingPrice: {{ item[0] }},
+        discountedPrice: {{ item[1] }},
+        productRatings: {{ item[2] }}
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // Calculate statistics
+  var averageSellingPrice = calculateAverageSellingPrice(priceData);
+  var averageDiscountedPrice = calculateAverageDiscountedPrice(priceData);
+  var highestSellingPrice = calculateHighestSellingPrice(priceData);
+  var lowestDiscountedPrice = calculateLowestDiscountedPrice(priceData);
+
+  // Display statistics
+  document.getElementById('averageSellingPrice').innerHTML = averageSellingPrice;
+  document.getElementById('averageDiscountedPrice').innerHTML = averageDiscountedPrice;
+  document.getElementById('highestSellingPrice').innerHTML = highestSellingPrice;
+  document.getElementById('lowestDiscountedPrice').innerHTML = lowestDiscountedPrice;
+
+  // Line chart generation
+  var ctx = document.getElementById('priceChart').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: priceData.map(function(item, index) {
+        return index + 1;
+      }),
+      datasets: [
+        {
+          label: 'Selling Price',
+          data: priceData.map(function(item) {
+            return item.sellingPrice;
+          }),
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: false,
+          tension: 0.4
+        },
+        {
+          label: 'Discounted Price',
+          data: priceData.map(function(item) {
+            return item.discountedPrice;
+          }),
+          borderColor: 'rgba(192, 75, 192, 1)',
+          backgroundColor: 'rgba(192, 75, 192, 0.2)',
+          fill: false,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Price'
+          }
+        }
+      }
+    }
+  });
+</script>

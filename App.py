@@ -1,4 +1,5 @@
 import decimal
+from itertools import count
 
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
@@ -16,87 +17,131 @@ app.config['MYSQL_DB'] = 'dbms'
 # Create MySQL instance
 mysql = MySQL(app)
 
+        
 @app.route('/', methods=["GET"])
 def home():
     if "username" in session:
+        username = session['username']
+        print(username)
         return render_template('index.html')
     else:
         return render_template('login.html')
 
-# # Tables Page
-# @app.route('/tables', methods=["GET"])
-# def tables():
-#     cur = mysql.connection.cursor()
-#     cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productrating,p.productratingamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = 'somen.sg';")
-#     fetchdata = cur.fetchall()
-#     stripped_data = [[str(item).strip() for item in row] for row in fetchdata]
-#     cur.close()
-#     return render_template("tables.html", data=stripped_data)
-# @app.route('/blank/<int:product_id>', methods=['GET'])
-# def view_store(product_id):
-#     cur = mysql.connection.cursor()
-#     cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productrating,p.productratingamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
-#     fetchdata = cur.fetchall()
+# Tables Page
+@app.route('/tables', methods=["GET"])
+def tables():
+    if 'username' in session:
+        username = session['username']
+        print(username)
+        cur = mysql.connection.cursor()
+        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
+        cur.execute(query, (username,))
+        fetchdata = cur.fetchall()
+        stripped_data = [[str(item).strip() for item in row] for row in fetchdata]
+        cur.close()
+        return render_template("tables.html", data=stripped_data, username=username)
+    else:
+        return "User not logged in"
+@app.route('/blank/<int:product_id>', methods=['GET'])
+def view_store(product_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productratings,p.productratingsamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
+    fetchdata = cur.fetchall()
 
-#     cur.close()
-#     return render_template("blank.html", data=fetchdata)
-
-# @app.route('/delete_product', methods=['POST'])
-# def delete_product():
-#     product_id = request.form.get('id')
-#     print(product_id)
-#     # Connect to MySQL
-#     conn = mysql.connection
-#     cursor = conn.cursor()
-
-#     try:
-#         # Execute the delete query
-#         query = "DELETE FROM product WHERE productid = %s"
-#         cursor.execute(query, (product_id,))
-#         conn.commit()
-#         return redirect('/success')
-#     except Exception as error:
-#         # Handle any errors that occur during the deletion
-#         print(f"Error deleting product: {error}")
-#         return redirect('/404')
-
-#     finally:
-#         # Close the cursor
-#         cursor.close()
+    cur.close()
+    return render_template("blank.html", data=fetchdata)
 
 
+@app.route('/optimize/<int:product_id>', methods=['GET'])
+def optimize(product_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productratings,p.productratingsamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
+    fetchdata = cur.fetchall()
+    cur.execute("SELECT p.category FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
+    category_data = cur.fetchall()
+
+    categories = category_data[0][0].split(";")
+ 
+    # Skip the first value of stripped_categories
+# Assume you have an array of stripped categories
+    stripped_categories = [category.strip() for category in categories][3:]
+    print(stripped_categories)
+    if stripped_categories:
+        cur.execute("""
+        SELECT p.sellingprice, p.discountedprice,p.productid
+        FROM product p
+        INNER JOIN (
+            SELECT productid
+            FROM product
+            WHERE category LIKE %s
+            AND productratings BETWEEN 1 AND 5
+            ORDER BY productratings DESC
+            LIMIT 10
+        ) AS subquery ON p.productid = subquery.productid
+        INNER JOIN store s ON p.storeid = s.storeid
+        WHERE p.category LIKE %s;
+    """, ['%' + stripped_categories[0] + '%', '%' + stripped_categories[0] + '%'])
+    pricing = cur.fetchall()
+    print(pricing)
+
+    cur.close()
+    return render_template("optimize.html", data=fetchdata,price=pricing)
+@app.route('/delete_product', methods=['POST'])
+def delete_product():
+    product_id = request.form.get('id')
+    print(product_id)
+    # Connect to MySQL
+    conn = mysql.connection
+    cursor = conn.cursor()
+
+    try:
+        # Execute the delete query
+        query = "DELETE FROM product WHERE productid = %s"
+        cursor.execute(query, (product_id,))
+        conn.commit()
+        return redirect('/success')
+    except Exception as error:
+        # Handle any errors that occur during the deletion
+        print(f"Error deleting product: {error}")
+        return redirect('/404')
+
+    finally:
+        # Close the cursor
+        cursor.close()
 
 
-# @app.route('/update_product', methods=['POST'])
-# def update_product():
-#     # Retrieve the form data
-#     id = request.form['id']
-#     product_name = request.form['ProductName']
-#     product_description = request.form['ProductDescription']
-#     selling_price = decimal.Decimal(request.form['sellingPrice'])
 
-#     discountPercentage = decimal.Decimal(request.form['discountPercentage'])
-#     print(discountPercentage)
-#     discounted_price = (selling_price*(100-discountPercentage))/100
-#     quantity = request.form['Quantity']
-#     free_shipping = request.form.get('freeShipping')  # Checkbox value
 
-#     # Perform the update operation using the retrieved data and the ID
-#     cur = mysql.connection.cursor()
-#     sql = "UPDATE product SET productName = %s, productDesc = %s, sellingprice = %s, discountedprice = %s, quantitysold = %s, shippingtype = %s WHERE productId = %s"
-#     params = (product_name, product_description, selling_price, discounted_price, quantity, free_shipping, id)
+@app.route('/update_product', methods=['POST'])
+def update_product():
+    # Retrieve the form data
+    id = request.form['id']
+    product_name = request.form['ProductName']
+    product_description = request.form['ProductDescription']
+    selling_price = decimal.Decimal(request.form['sellingPrice'])
 
-#     print("SQL Statement:", sql)
-#     print("Parameters:", params)
+    discountPercentage = decimal.Decimal(request.form['discountPercentage'])
+    print(discountPercentage)
+    discounted_price = (selling_price*(100-discountPercentage))/100
+    quantity = request.form['Quantity']
+    free_shipping = request.form.get('freeShipping')  # Checkbox value
 
-#     cur.execute(sql, params)
+    # Perform the update operation using the retrieved data and the ID
+    cur = mysql.connection.cursor()
+    sql = "UPDATE product SET productName = %s, productDesc = %s, sellingprice = %s, discountedprice = %s, quantitysold = %s, shippingtype = %s WHERE productId = %s"
+    params = (product_name, product_description, selling_price, discounted_price, quantity, free_shipping, id)
+
+    print("SQL Statement:", sql)
+    print("Parameters:", params)
+
+    cur.execute(sql, params)
     
-#     print()
-#     mysql.connection.commit()
-#     cur.close()
+    print()
+    mysql.connection.commit()
+    cur.close()
 
-#     # Redirect to a success page or perform any other necessary action
-#     return redirect('/success')
+    # Redirect to a success page or perform any other necessary action
+    return redirect('/success')
 
 @app.route('/success')
 def success():

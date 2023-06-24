@@ -1,5 +1,5 @@
 from App import app
-from flask import request, session
+from flask import Flask, session, redirect, url_for, request
 from helpers.database import *
 from helpers.hashpass import *
 from bson import json_util, ObjectId
@@ -7,13 +7,18 @@ from datetime import datetime
 
 import json
 
+
+
+@app.route('/login', methods=['POST'])
 def checkloginusername():
     username = request.form["username"]
     check = db.user.find_one({"username": username})
     if check is None:
         return "No User"
     else:
-        return "User exists"
+      
+        session['username'] = username  # Store the username in the session
+        return redirect(url_for('index'))
 
 def checkloginpassword():
     username = request.form["username"]
