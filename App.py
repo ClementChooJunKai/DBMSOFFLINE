@@ -91,11 +91,24 @@ def home():
 
         total_earnings = earnings_data[0] if earnings_data[0] is not None else 0
 
-       
+        rating_difference_query = """
+        SELECT storename, storerating - avg_rating AS rating_difference
+        FROM (
+            SELECT s.storename, s.storerating, AVG(s2.storerating) AS avg_rating
+            FROM store AS s
+            INNER JOIN store AS s2 ON s.storename != s2.storename
+            WHERE s.storename = %s
+            GROUP BY s.storename, s.storerating
+        ) AS subquery;
+        """
+        cur.execute(rating_difference_query, (username,))
+        rating_difference_data = cur.fetchone()
+        rating_difference = rating_difference_data[1] if rating_difference_data is not None else 0
+        print(rating_difference)
 
 
         cur.close()
-        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100))
+        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),difference= round(rating_difference,2))
     else:
         return render_template('login.html')
 
