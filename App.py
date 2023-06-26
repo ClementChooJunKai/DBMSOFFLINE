@@ -67,7 +67,7 @@ def optimize(product_id):
 # Skip the first value of stripped_categories
 # Assume you have an array of stripped categories
     stripped_categories = [category.strip() for category in categories][3:]
-    print(stripped_categories)
+  
     if stripped_categories:
         cur.execute("""
         SELECT p.sellingprice, p.discountedprice,p.productid
@@ -85,7 +85,25 @@ def optimize(product_id):
     """, ['%' + stripped_categories[0] + '%', '%' + stripped_categories[0] + '%'])
     pricing = cur.fetchall()
 
-
+    if stripped_categories:
+        # Calculate the average rating for each stripped category
+        average_ratings = []
+        all_ratings = []
+        for category in stripped_categories:
+            cur.execute("""
+                SELECT p.productratings
+                FROM product p
+                INNER JOIN store s ON p.storeid = s.storeid
+                WHERE p.category LIKE %s
+                AND p.productratings BETWEEN 1 AND 5
+                ORDER BY p.productratings DESC
+                
+            """, ['%' + category + '%'])
+            ratings = cur.fetchall()
+            all_ratings.extend([rating[0] for rating in ratings])
+            average_rating = sum([rating[0] for rating in ratings]) / len(ratings) if len(ratings) > 0 else 0
+            average_ratings.append(average_rating)
+   
     # Fetch top-rated products and their product names
     cur.execute("""
         SELECT p.ProductName
@@ -123,13 +141,11 @@ def optimize(product_id):
     # Filter out keywords that don't meet the frequency threshold and exclude symbols/numbers
     filtered_common_keywords = [(keyword, count) for keyword, count in keyword_counts.items() if count >= frequency_threshold and re.match(r'^[a-zA-Z]+$', keyword)]
 
-    # Print the filtered common keywords with their counts
-    print("Filtered Common Keywords:")
-    for keyword, count in filtered_common_keywords:
-        print(keyword, count)
+   
 
 
-    return render_template("optimize.html", data=fetchdata,price=pricing,keywords= filtered_common_keywords)
+
+    return render_template("optimize.html", data=fetchdata,price=pricing,keywords= filtered_common_keywords,ratingData=all_ratings,avgrating=round(average_rating,2))
 @app.route('/delete_product', methods=['POST'])
 def delete_product():
     product_id = request.form.get('id')

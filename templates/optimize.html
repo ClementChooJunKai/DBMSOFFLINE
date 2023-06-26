@@ -3,7 +3,7 @@
 <!-- Begin Page Content -->
 <div class="container-fluid">
   <!-- Page Heading -->
-  <h1 class="h3 mb-4 text-gray-800">Edit Products</h1>
+  <h1 class="h3 mb-4 text-gray-800">Product Optimization</h1>
 
   <!-- Bootstrap Form -->
   <div class="row justify-content-center">
@@ -45,6 +45,10 @@
               <label for="Quantity">Amount Sold</label>
               <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][6] }}" readonly>
             </div>
+            <div class="form-group">
+              <label for="Quantity">Product Rating</label>
+              <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][8] }}" readonly>
+            </div>
 
             <!-- Add any additional form fields as needed -->
 
@@ -71,6 +75,9 @@
           <li class="list-group-item">
             Most Used Word: <span id="mostUsedWord"></span>
           </li>
+          <li class="list-group-item">
+            Average Rating: <span id="mostUsedWord">{{avgrating}}</span>
+          </li>
         </ul>
       </div>
     </div>
@@ -92,6 +99,13 @@
       
       <canvas id="barChart"></canvas>
     </div>
+  </div>
+</div>
+<!-- Histogram Chart Container -->
+<div class="row justify-content-center mt-4">
+  <h2>Ratings Histogram</h2>
+  <div class="col-md-12">
+    <canvas id="histogramChart"></canvas>
   </div>
 </div>
 
@@ -193,6 +207,8 @@ var keywordData = [
     }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
+
+
 
 // Calculate statistics
 var mostUsedWords = calculateMostUsedWords(keywordData, 5);
@@ -299,4 +315,61 @@ document.getElementById('mostUsedWord').innerHTML = mostUsedWords.join(', ');
       }
     }
   });
+
+
+// Iterate over the ratingData array in JavaScript
+var ratingsHistogramData = {};
+  {% for rating in ratingData %}
+    var rating = {{ rating }};
+  
+    // Count the occurrences of each rating
+    if (rating in ratingsHistogramData) {
+      ratingsHistogramData[rating]++;
+    } else {
+      ratingsHistogramData[rating] = 1;
+    }
+  {% endfor %}
+
+  // Convert histogram data to arrays for chart.js
+  var histogramLabels = Object.keys(ratingsHistogramData);
+  var histogramValues = Object.values(ratingsHistogramData);
+
+  // Histogram chart generation
+  var ctx3 = document.getElementById('histogramChart').getContext('2d');
+  var chart3 = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels: histogramLabels,
+      datasets: [
+        {
+          label: 'Ratings',
+          data: histogramValues,
+          backgroundColor: 'rgba(75, 192, 192, 0.8)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Rating'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Count'
+          },
+          beginAtZero: true,
+          stepSize: 1
+        }
+      }
+    }
+  });
+
 </script>
