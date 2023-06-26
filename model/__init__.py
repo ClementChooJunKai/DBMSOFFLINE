@@ -13,6 +13,7 @@ import json
 def checkloginusername():
     username = request.form["username"]
     check = db.user.find_one({"username": username})
+    
     if check is None:
         return "No User"
     else:

@@ -1,0 +1,130 @@
+{% include 'admin-layout.html' %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <h1 class="h3 mb-2 text-gray-800">Charts</h1>
+  <p class="mb-4">Chart.js is a third party plugin that is used to generate the charts in this theme. The charts below have been customized - for further customization options, please visit the <a target="_blank" href="https://www.chartjs.org/docs/latest/">official Chart.js documentation</a>.</p>
+
+  <!-- Content Row -->
+  <div class="row">
+
+    <div class="col-xl-12">
+        <!-- Donut Chart -->
+        <div class="card shadow mb-4" style="width: 100%">
+          <!-- Card Header - Dropdown -->
+          <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Revenue</h6>
+          </div>
+          <!-- Card Body -->
+          <div class="card-body">
+            <div class="chart-pie">
+              <canvas id="myPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+</div>
+<!-- /.container-fluid -->
+
+</div>
+<!-- End of Main Content -->
+
+<!-- Footer -->
+<footer class="sticky-footer bg-white">
+  <div class="container my-auto">
+    <div class="copyright text-center my-auto">
+      <span>&copy; Your Website 2019</span>
+    </div>
+  </div>
+</footer>
+<!-- End of Footer -->
+
+</div>
+<!-- End of Content Wrapper -->
+
+</div>
+<!-- End of Page Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Bootstrap core JavaScript-->
+<script src="static/vendor/jquery/jquery.min.js"></script>
+<script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="static/js/sb-admin-2.min.js"></script>
+
+<!-- Page level plugins -->
+<script src="static/vendor/chart.js/Chart.min.js"></script>
+
+<!-- JavaScript code using Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    $(document).ready(function() {
+      // Get the fetched data from the template variable
+      var data = JSON.parse('{{ data|tojson|safe }}');
+  
+      // Extract the store names and revenues from the fetched data
+      var productName = data.map(function(item) {
+        return item.productName;
+      });
+      var revenues = data.map(function(item) {
+        return  item.revenue;
+      });
+  
+      var ctx = document.getElementById('myPieChart').getContext('2d');
+      var myPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: productName,
+          datasets: [{
+            data: revenues,
+            backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dbb10f', '#d32e2b'],
+            hoverBorderColor: 'rgba(234, 236, 244, 1)',
+          }],
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins:{
+          legend: {
+            display: true,
+            position: 'right',
+            
+          }},
+          tooltips: {
+            backgroundColor: 'rgb(255,255,255)',
+            bodyFontColor: '#858796',
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: false,
+            caretPadding: 10,
+          },
+        
+          cutoutPercentage: 80,
+        },
+      });
+
+
+
+      
+    });
+
+  </script>
+  
+
+</body>
+
+</html>

@@ -1,6 +1,7 @@
 from collections import Counter
 import decimal
 from itertools import count
+from helpers.database import *
 import nltk
 from nltk.tokenize import word_tokenize
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -111,6 +112,57 @@ def home():
         return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),difference= round(rating_difference,2))
     else:
         return render_template('login.html')
+
+@app.route('/revenue', methods=["GET"])
+def revenue():
+    if 'username' in session:
+        username = session['username']
+
+         # Aggregate pipeline to calculate revenue
+        pipeline = [
+            {
+                '$lookup': {
+                    'from': 'store',
+                    'localField': 'StoreID',
+                    'foreignField': 'StoreID',
+                    'as': 'store'
+                }
+            },
+            {
+                '$match': {
+                    'store.storeName': username
+                    
+                }
+            },
+            {
+                '$project': {
+                    '_id': 0,
+                    'QuantitySold': 1,
+                    'DiscountedPrice': 1,
+                    'productName':1,
+                    'revenue': { '$multiply': ['$QuantitySold', '$DiscountedPrice'] },
+                    'StoreID':1,
+                    
+                    # 'storeName': { '$arrayElemAt': ['$store.storeName', 0] },
+                }
+            }
+            
+        ]
+      
+        fetchdata = list(db.products.aggregate(pipeline))
+        for doc in fetchdata:
+            print('Quantity Sold:', doc['QuantitySold'])
+            print('Discounted Price:', doc['DiscountedPrice'])
+            print('Revenue:', doc['revenue'])
+            print(doc['productName'])
+            
+            
+         
+
+
+    return render_template("revenue.html", data=fetchdata, username=username, )
+
+
 
 # Tables Page
 @app.route('/tables', methods=["GET"])
