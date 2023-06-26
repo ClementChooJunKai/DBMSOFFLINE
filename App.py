@@ -20,12 +20,82 @@ app.config['MYSQL_DB'] = 'dbms'
 mysql = MySQL(app)
 
         
-@app.route('/', methods=["GET"])
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    if "username" in session:
+    if request.method == 'POST':
+        if 'username' in session:
+            shop_count = 2
+            username = session['username']
+            cur = mysql.connection.cursor()
+            username = session['username']
+            query = "SELECT * FROM store WHERE storename = %s;"
+            cur.execute(query, (username,))
+
+            fetchdata = cur.fetchall()
+            # Retrieve the filter parameters from the request
+            shop_selection = request.form.get('shopSelection')
+            
+            shop_count = int(request.form.get('shopCount'))
+    
+            # Construct and execute the SQL query based on the filter parameters
+            if shop_selection == 'top':
+                top_earnings_query = """
+                    SELECT s.storename, SUM(p.quantitysold * p.discountedprice) AS total_earnings
+                    FROM product AS p
+                    INNER JOIN store AS s ON p.storeid = s.storeid
+                    GROUP BY s.storename
+                    ORDER BY total_earnings DESC
+                    LIMIT %s;
+                """
+                cur.execute(top_earnings_query, (shop_count,))
+                earnings_data = cur.fetchall()
+                earning = [(storename, float(total_earnings)) for storename, total_earnings in earnings_data]
+                # Process the filtered data as needed
+                print(earning)
+                cur.close()
+                return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),earning=earning)
+            elif shop_selection == 'bottom':
+                bottom_earnings_query = """
+                    SELECT s.storename, SUM(p.quantitysold * p.discountedprice) AS total_earnings
+                    FROM product AS p
+                    INNER JOIN store AS s ON p.storeid = s.storeid
+                    GROUP BY s.storename
+                    ORDER BY total_earnings ASC
+                    LIMIT %s;
+                """
+                cur.execute(bottom_earnings_query, (shop_count,))
+                bottom_earnings_data = cur.fetchall()
+                # Process the filtered data as needed
+                print(bottom_earnings_data)
+
+                cur.close()
+                return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),earning=bottom_earnings_data)
+
+    # The remaining code for the 'GET' request remains the same as before
+    if 'username' in session:
         username = session['username']
-        print(username)
-        return render_template('index.html')
+        cur = mysql.connection.cursor()
+        query = "SELECT * FROM store WHERE storename = %s;"
+        cur.execute(query, (username,))
+
+        fetchdata = cur.fetchall()
+        earnings_query = """
+            SELECT SUM(p.quantitysold * p.discountedprice) AS total_earnings
+            FROM product AS p
+            INNER JOIN store AS s ON p.storeid = s.storeid
+            WHERE s.storename = %s;
+        """
+        cur.execute(earnings_query, (username,))
+        earnings_data = cur.fetchone()
+
+        total_earnings = earnings_data[0] if earnings_data[0] is not None else 0
+
+       
+
+
+        cur.close()
+        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100))
     else:
         return render_template('login.html')
 
@@ -34,7 +104,7 @@ def home():
 def tables():
     if 'username' in session:
         username = session['username']
-        print(username)
+        
         cur = mysql.connection.cursor()
         query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
         cur.execute(query, (username,))
