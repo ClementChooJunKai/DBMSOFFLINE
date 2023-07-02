@@ -1,12 +1,154 @@
-<html>
+{% include 'admin-layout.html' %}
 
-<head>
-    <title>Comparision</title>
-</head>
+<!-- Begin Page Content -->
+<div class="container-fluid">
 
-<body>
-    <h1>Welcome To The Comparision Page</h1>
+  <!-- Page Heading -->
+  <h1 class="h3 mb-2 text-gray-800">Comparison</h1>
+
+  <div class="row">
+    <!-- DataTales Example -->
+    <div class="col-lg-6">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Store Name: {{data[0][2]}}</h6>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Statistics Summary</h5>
+          <ul class="list-group">
+            <li class="list-group-item">
+              Ranking: <span id="Ranking">{{data[0][0]}}</span>
+            </li>
+            <li class="list-group-item">
+              StoreID: <span id="StoreID">{{data[0][1]}}</span>
+            </li>
+            <li class="list-group-item">
+              Store Rating: <span id="StoreName">{{cstore[0][3]}}/5 ({{cstore[0][4]}})</span>
+            </li>
+            <li class="list-group-item">
+              Composite Score: <span id="CompositeScore">{{compscore}} / 1</span>
+            </li>
+            <li class="list-group-item">
+              Store Followers: <span id="StoreFollowers">{{cstore[0][6]}}</span>
+            </li>
+            <li class="list-group-item">
+              Chat Performance: <span id="mostUsedWord">{{cstore[0][8]}}</span>
+            </li>
+            <li class="list-group-item">
+              Reply Rate: <span id="avgratings">{{cstore[0][9]}}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Your Store</h6>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Statistics Summary</h5>
+          <ul class="list-group">
+            <li class="list-group-item">
+              Ranking: <span id="Ranking">{{ storedata[0][0] }}</span>
+            </li>
+            <li class="list-group-item">
+              StoreID: <span id="StoreID">{{selfdata[0][0]}}</span>
+            </li>
+            <li class="list-group-item">
+              Store Rating: <span id="StoreRating">{{selfdata[0][3]}}/5 ({{selfdata[0][4]}})</span>
+            </li>
+            <li class="list-group-item">
+              Composite Score: <span id="CompositeScore">{{storecomp}} / 1</span>
+            </li>
+            <li class="list-group-item">
+              Store Followers: <span id="StoreFollowers:">{{selfdata[0][6]}}</span>
+            </li>
+            <li class="list-group-item">
+              Chat Performance: <span id="ChatPerformance">{{selfdata[0][8]}}</span>
+            </li>
+            <li class="list-group-item">
+              Reply Rate: <span id="ReplyRate">{{selfdata[0][9]}}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendation Section -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Recommendations</h6>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Based on the Comparison:</h5>
+          {% if selfdata[0][3] < cstore[0][3] %}
+            <p style="color:red">Your store can improve its rating to match or surpass the opponent store. Focus on enhancing the quality of products, providing excellent customer service, and encouraging satisfied customers to leave positive reviews.</p>
+          {% endif %}
+          {% if selfdata[0][6] < cstore[0][6] %}
+            <p style="color:red">Increasing your store's followers can help boost your visibility and credibility. Consider implementing strategies to attract more followers, such as engaging with customers on social media, running promotions, or collaborating with influencers.</p>
+          {% endif %}
+          {% if selfdata[0][8] < cstore[0][8] %}
+            <p style="color:red">Improving your chat performance can lead to better customer satisfaction. Ensure prompt and helpful responses to customer queries. Consider implementing chatbots or hiring additional customer support staff to handle the chat volume effectively.</p>
+          {% endif %}
+          {% if selfdata[0][9] > cstore[0][9] %}
+            <p style="color:green">With your higher reply rate, continue maintaining good communication with customers. Promptly respond to inquiries and provide helpful information. This can further enhance your store's reputation and customer satisfaction.</p>
+          {% endif %}
+          {% if storecomp > compscore %}
+            <p style="color:green">Your store has a higher composite score, indicating better overall performance. Leverage this advantage by emphasizing it in your marketing efforts and highlighting it as a reason for customers to choose your store.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="sticky-footer bg-white">
+    <div class="container my-auto">
+      <div class="text-center my-auto">
+        <span>&copy; Your Website 2023</span>
+      </div>
+    </div>
+  </footer>
+  <!-- End of Footer -->
+
+</div>
+<!-- End of Content Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Bootstrap core JavaScript-->
+<script src="static/vendor/jquery/jquery.min.js"></script>
+<script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="static/js/sb-admin-2.min.js"></script>
+
+<!-- Page level plugins -->
+<script src="static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="static/js/demo/datatables-demo.js"></script>
+
+<style>
+  .truncate-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust the maximum width as per your preference */
+  }
+</style>
+
 </body>
-
-
 </html>

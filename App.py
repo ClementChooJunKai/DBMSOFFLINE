@@ -108,8 +108,13 @@ def home():
         print(rating_difference)
 
 
+        if rating_difference >=0 :
+            rdiff="You are above average by : " + str(round(rating_difference,2))
+        else :  
+            rdiff="You are below average by : " + str(round(rating_difference,2)).strip("-")
+
         cur.close()
-        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),difference= round(rating_difference,2))
+        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100),difference= rdiff)
     else:
         return render_template('login.html')
 
@@ -177,6 +182,23 @@ def tables():
         stripped_data = [[str(item).strip() for item in row] for row in fetchdata]
         cur.close()
         return render_template("tables.html", data=stripped_data, username=username)
+    else:
+        return "User not logged in"
+    
+
+#Stores Page
+@app.route('/Stores', methods=["GET"])
+def stores():
+    if 'username' in session:
+        username = session['username']
+        
+        cur = mysql.connection.cursor()
+        query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
+        cur.execute(query)
+        fetchdata = cur.fetchall()
+        stripped_data = [[str(item).strip() for item in row] for row in fetchdata]
+        cur.close()
+        return render_template("store.html", data=stripped_data, username=username)
     else:
         return "User not logged in"
 @app.route('/blank/<int:product_id>', methods=['GET'])
@@ -276,11 +298,106 @@ def optimize(product_id):
     # Filter out keywords that don't meet the frequency threshold and exclude symbols/numbers
     filtered_common_keywords = [(keyword, count) for keyword, count in keyword_counts.items() if count >= frequency_threshold and re.match(r'^[a-zA-Z]+$', keyword)]
 
-   
-
-
-
     return render_template("optimize.html", data=fetchdata,price=pricing,keywords= filtered_common_keywords,ratingData=all_ratings,avgrating=round(average_rating,2))
+
+
+@app.route('/compare/<int:store_id>', methods=['GET'])
+def compare(store_id):
+    username = session['username']
+    cur = mysql.connection.cursor()
+    cur.execute('''
+        SELECT
+          ranking,
+          storeId,
+          storeName,
+          compositeScore
+          
+        FROM (
+          SELECT
+            storeId,
+            storeName,
+            compositeScore,
+            RANK() OVER (ORDER BY compositeScore DESC) AS ranking
+          FROM (
+            SELECT
+              storeId,
+              storeName,
+              (
+                (storeRating / 5) * 0.5 +
+                (storeAmtRating / max_storeAmtRating) * 0.1 +
+                (productCount / max_productCount) * 0.15 +
+                (storeFollowers / max_storeFollowers) * 0.15 +
+                (chatPerformance ) * 0.1 
+            
+              ) AS compositeScore
+            FROM Store,
+              (SELECT
+                MAX(storeAmtRating) AS max_storeAmtRating,
+                MAX(productCount) AS max_productCount,
+                MAX(storeFollowers) AS max_storeFollowers
+              FROM Store) AS max_values
+          ) AS ranked_shops
+        ) AS ranked_stores
+        WHERE storeId = %s;
+    ''', (store_id,))
+    
+    fetchdata = cur.fetchall()
+    
+    cur.execute('''
+        SELECT
+          ranking,
+          storeId,
+          storeName,
+          compositeScore
+        FROM (
+          SELECT
+            storeId,
+            storeName,
+            compositeScore,
+            RANK() OVER (ORDER BY compositeScore DESC) AS ranking
+          FROM (
+            SELECT
+              storeId,
+              storeName,
+              (
+                (storeRating / 5) * 0.5 +
+                (storeAmtRating / max_storeAmtRating) * 0.1 +
+                (productCount / max_productCount) * 0.15 +
+                (storeFollowers / max_storeFollowers) * 0.15 +
+                (chatPerformance ) * 0.1 
+            
+              ) AS compositeScore
+            FROM Store,
+              (SELECT
+                MAX(storeAmtRating) AS max_storeAmtRating,
+                MAX(productCount) AS max_productCount,
+                MAX(storeFollowers) AS max_storeFollowers
+              FROM Store) AS max_values
+          ) AS ranked_shops
+        ) AS ranked_stores
+        WHERE storeName = %s;
+    ''', (username,))
+    owndata = cur.fetchall()
+    cur.execute('''SELECT * FROM Store WHERE storeId = %s;''', (store_id,))
+    cstore = cur.fetchall()
+    cur.execute('''SELECT * FROM Store WHERE storeName = %s;''', (username,))
+    ownstore = cur.fetchall()
+    
+
+    return render_template("compare.html",cstore=cstore, data=fetchdata,compscore=round(fetchdata[0][3],3),storecomp=round(owndata[0][3],3),storedata=owndata,selfdata=ownstore)
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/delete_product', methods=['POST'])
 def delete_product():
     product_id = request.form.get('id')
@@ -343,7 +460,7 @@ def success():
     return render_template('success.html')
 
 @app.route('/index')
-def compare():
+def dash():
     return render_template('index.html')
 
 @app.route('/', methods=["GET"])
