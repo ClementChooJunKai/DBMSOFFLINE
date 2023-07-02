@@ -523,8 +523,10 @@ def error_page():
 @app.route('/blank', methods=["GET"])
 def blank():
     return render_template('blank.html')
-
-# Buttons Page
+# Blank Page
+@app.route('/profile', methods=["GET"])
+def settings():
+    return render_template('profile.html')
 @app.route('/buttons', methods=["GET"])
 def buttons():
     return render_template("buttons.html")

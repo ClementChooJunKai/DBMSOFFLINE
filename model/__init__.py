@@ -1,3 +1,4 @@
+from flask_mysqldb import MySQL
 from App import app
 from flask import Flask, session, redirect, url_for, request
 from helpers.database import *
@@ -8,6 +9,14 @@ from datetime import datetime
 import json
 
 
+# Configure MySQL
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'dbms'
+
+# Create MySQL instance
+mysql = MySQL(app)
 
 @app.route('/login', methods=['POST'])
 def checkloginusername():
@@ -43,6 +52,10 @@ def checkusername():
 
 
 def registerUser():
+    # Establish a connection to MySQL
+   
+    mysql_cursor = mysql.connection.cursor()
+
     fields = [k for k in request.form]
     values = [request.form[k] for k in request.form]
     data = dict(zip(fields, values))
@@ -52,8 +65,14 @@ def registerUser():
     user_data["created_at"] = datetime.now()
     db.user.insert_one(user_data)
 
+
+    account_query = "INSERT INTO Account ( username, email, fullName, password,hashedPassword) VALUES (%s, %s, %s, %s,%s)"
+    account_values = ( user_data["username"], user_data["email"], user_data["name"],user_data["password"], user_data["confirmpassword"])
+    mysql_cursor.execute(account_query, account_values)
+    
+    mysql_cursor.close()
+    mysql.connection.commit()
+    mysql.connection.close()
+
     # sendmail(subject="Registration for Flask Admin Boilerplate", sender="Flask Admin Boilerplate", recipient=user_data["email"], body="You successfully registered on Flask Admin Boilerplate")
     print("Done")
-
-    
-    
