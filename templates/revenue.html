@@ -5,29 +5,61 @@
 
   <!-- Page Heading -->
   <h1 class="h3 mb-2 text-gray-800">Charts</h1>
-  <p class="mb-4">Chart.js is a third party plugin that is used to generate the charts in this theme. The charts below have been customized - for further customization options, please visit the <a target="_blank" href="https://www.chartjs.org/docs/latest/">official Chart.js documentation</a>.</p>
+  <p class="mb-4">Chart.js is a third-party plugin that is used to generate the charts in this theme. The charts below
+    have been customized - for further customization options, please visit the <a target="_blank"
+      href="https://www.chartjs.org/docs/latest/">official Chart.js documentation</a>.</p>
 
   <!-- Content Row -->
   <div class="row">
 
     <div class="col-xl-12">
-        <!-- Donut Chart -->
-        <div class="card shadow mb-4" style="width: 100%">
-          <!-- Card Header - Dropdown -->
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Revenue</h6>
-          </div>
-          <!-- Card Body -->
-          <div class="card-body">
-            <div class="chart-pie">
-              <canvas id="myPieChart"></canvas>
-            </div>
+      <!-- Donut Chart -->
+      <div class="card shadow mb-4" style="width: 100%">
+        <!-- Card Header - Dropdown -->
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Revenue Share of Each Product</h6>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="chart-pie">
+            <canvas id="myPieChart"></canvas>
           </div>
         </div>
       </div>
 
-</div>
-<!-- /.container-fluid -->
+
+      <div class="card shadow mb-4" style="width: 100%">
+        <!-- Card Header - Dropdown -->
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Top 10 Products based on Quantity Sold</h6>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="chart-bar">
+            <canvas id="myBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow mb-4" style="width: 100%">
+        <!-- Card Header - Dropdown -->
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Top 10 Products based on Quantity Sold</h6>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="chart-bar">
+            <canvas id="forecastBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+
+  </div>
+  <!-- /.container-fluid -->
 
 </div>
 <!-- End of Main Content -->
@@ -70,60 +102,324 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    $(document).ready(function() {
-      // Get the fetched data from the template variable
-      var data = JSON.parse('{{ data|tojson|safe }}');
-  
-      // Extract the store names and revenues from the fetched data
-      var productName = data.map(function(item) {
-        return item.productName;
-      });
-      var revenues = data.map(function(item) {
-        return  item.revenue;
-      });
-  
-      var ctx = document.getElementById('myPieChart').getContext('2d');
-      var myPieChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: productName,
-          datasets: [{
-            data: revenues,
-            backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
-            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dbb10f', '#d32e2b'],
-            hoverBorderColor: 'rgba(234, 236, 244, 1)',
-          }],
-        },
-        options: {
-          maintainAspectRatio: false,
-          plugins:{
+  $(document).ready(function () {
+
+
+    // Get the fetched data from the template variable
+    var data = JSON.parse('{{ revenue_data|tojson|safe }}');
+
+    // Extract the store names and revenues from the fetched data
+    var productName = data.map(function (item) {
+      return item.productName;
+    });
+    var revenues = data.map(function (item) {
+      return item.revenue;
+    });
+
+    var ctx = document.getElementById('myPieChart').getContext('2d');
+    var myPieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: productName,
+        datasets: [{
+          data: revenues,
+          backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+          hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dbb10f', '#d32e2b'],
+          hoverBorderColor: 'rgba(234, 236, 244, 1)',
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
           legend: {
             display: true,
             position: 'right',
-            
-          }},
-          tooltips: {
-            backgroundColor: 'rgb(255,255,255)',
-            bodyFontColor: '#858796',
-            borderColor: '#dddfeb',
-            borderWidth: 1,
-            xPadding: 15,
-            yPadding: 15,
-            displayColors: false,
-            caretPadding: 10,
-          },
-        
-          cutoutPercentage: 80,
+          }
         },
-      });
-
-
-
-      
+        tooltips: {
+          backgroundColor: 'rgb(255,255,255)',
+          bodyFontColor: '#858796',
+          borderColor: '#dddfeb',
+          borderWidth: 1,
+          xPadding: 15,
+          yPadding: 15,
+          displayColors: false,
+          caretPadding: 10,
+        },
+        cutoutPercentage: 80,
+      },
     });
 
-  </script>
-  
+    var data = JSON.parse('{{ quantity_sold_data|tojson|safe }}');
+    console.log(data);
+    // Extract the product names and quantities from the fetched data
+    var quantitySoldProductName = data.map(function (item) {
+      return item.productName;
+    });
+    var quantitySold = data.map(function (item) {
+      return item.totalQuantitySold;
+    });
+
+    var ctx2 = document.getElementById('myBarChart').getContext('2d');
+    var myBarChart = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: quantitySoldProductName,
+        datasets: [{
+          label: 'Quantity Sold',
+          data: quantitySold,
+          backgroundColor: '#4e73df',
+          hoverBackgroundColor: '#2e59d9',
+          borderColor: 'rgba(78, 115, 223, 0.8)',
+          borderWidth: 1,
+          maxBarThickness: 50,
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false,
+
+            },
+
+            ticks: {
+              callback: function (value) {
+                if (value.length > 10) { // Adjust the character length as per your preference
+                  return value.substr(0, 10) + '...'; // Truncate the label and add ellipsis
+                }
+                return value;
+              }
+            },
+
+          },
+
+          y: {
+            grid: {
+              display: false,
+              drawBorder: false,
+            },
+            ticks: {
+              beginAtZero: true,
+              stepSize: 10,
+            }
+          }
+        },
+        tooltips: {
+          backgroundColor: 'rgb(255,255,255)',
+          bodyFontColor: '#858796',
+          borderColor: '#dddfeb',
+          borderWidth: 1,
+          xPadding: 15,
+          yPadding: 15,
+          displayColors: false,
+          caretPadding: 10,
+        },
+      },
+
+    });
+
+    //--------------
+
+    // // console.log(priceRangeData);
+    // var priceRangeData = JSON.parse('{{ price_range_data|tojson|safe }}');
+    // // console.log(priceRangeData);
+
+    // // Extract the price range categories and revenue data from the fetched data
+    // var priceRangeCategories = priceRangeData.map(function (item) {
+    //   return item._id;
+    // });
+
+    // var datasets = [];
+    // var backgroundColors = {
+    //   Low: '#1cc88a',
+    //   Medium: '#f6c23e',
+    //   High: '#e74a3b',
+    //   Other: '#4e73df'
+    // };
+
+    // priceRangeData.forEach(function (item, index) {
+    //   var productNames = item.products.map(function (product) {
+    //     return product.productName;
+    //   });
+
+    //   var revenues = item.products.map(function (product) {
+    //     return product.revenue;
+    //   });
+
+    //   var productDatasets = productNames.map(function (productName) {
+    //     return {
+    //       label: productName,
+    //       data: [],
+    //       backgroundColor: backgroundColors[item._id],
+    //       borderColor: 'rgba(78, 115, 223, 0.8)',
+    //       borderWidth: 1,
+    //       hoverBackgroundColor: 'rgba(78, 115, 223, 0.8)',
+    //       hoverBorderColor: 'rgba(78, 115, 223, 1)'
+    //     };
+    //   });
+
+    //   item.products.forEach(function (product) {
+    //     var datasetIndex = productNames.indexOf(product.productName);
+    //     productDatasets[datasetIndex].data.push(product.revenue);
+    //   });
+
+    //   // Filter out products with zero revenue
+    //   productDatasets = productDatasets.filter(function (dataset) {
+    //     return dataset.data.length > 0;
+    //   });
+
+    //   datasets.push(...productDatasets);
+    // });
+
+    // var ctx = document.getElementById('myRevenueBarChart').getContext('2d');
+    // var myBarChart = new Chart(ctx, {
+    //   type: 'bar',
+    //   data: {
+    //     labels: priceRangeCategories,
+    //     datasets: datasets
+    //   },
+    //   options: {
+    //     maintainAspectRatio: false,
+    //     plugins: {
+    //       legend: {
+    //         display: true,
+    //         position: 'bottom' // Adjust legend position as needed
+    //       }
+    //     },
+    //     scales: {
+    //       x: {
+    //         stacked: true,
+    //         ticks: {
+    //           beginAtZero: true
+    //         }
+    //       },
+    //       y: {
+    //         stacked: true,
+    //         ticks: {
+    //           beginAtZero: true
+    //         }
+    //       }
+    //     },
+    //     tooltips: {
+    //       mode: 'index',
+    //       intersect: false,
+    //       callbacks: {
+    //         title: function (context) {
+    //           var priceRange = context[0].label;
+    //           return 'Price Range: ' + priceRange;
+    //         },
+    //         label: function (context) {
+    //           var datasetIndex = context.datasetIndex;
+    //           var index = context.dataIndex;
+    //           var productName = datasets[datasetIndex].label;
+    //           var revenue = context.formattedValue;
+    //           return productName + ': $' + revenue;
+    //         }
+    //       }
+    //     }
+
+    //   }
+
+    // });
+
+
+
+    var forecast_data = JSON.parse('{{ forecast_data|tojson|safe }}');
+console.log(forecast_data);
+
+// Extract the unique product names from the fetched data
+var productNames = [...new Set(forecast_data.map(item => item.productName))];
+
+// Extract the unique months from the fetched data
+var months = [...new Set(forecast_data.map(item => item.month))];
+
+// Create an empty array to hold the datasets
+var datasets = [];
+
+// Iterate over the product names
+for (var i = 0; i < productNames.length; i++) {
+  var productName = productNames[i];
+
+  // Create an empty array to hold the data for the current product
+  var data = [];
+
+  // Iterate over the months
+  for (var j = 0; j < months.length; j++) {
+    var month = months[j];
+
+    // Find the data for the current product and month
+    var item = forecast_data.find(item => item.productName === productName && item.month === month);
+
+    // If data exists, add the quantitySold to the data array, otherwise add 0
+    data.push(item ? item.quantitySold : 0);
+  }
+
+  // Create a dataset object for the current product
+  var dataset = {
+    label: productName,
+    data: data,
+    backgroundColor: getRandomColor() // Generate a random color for each dataset
+  };
+
+  // Add the dataset to the datasets array
+  datasets.push(dataset);
+}
+
+var ctx = document.getElementById('forecastBarChart').getContext('2d');
+var myChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: datasets
+  },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        stacked: true,
+        grid: {
+          display: true
+        },
+        ticks: {
+          beginAtZero: true
+        }
+      }
+    }
+  }
+});
+
+// Function to generate a random color
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+  });
+
+</script>
 
 </body>
 
