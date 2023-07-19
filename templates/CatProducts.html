@@ -20,30 +20,38 @@
     </div>
   </form>
 
-  <div class="table-responsive">
-    <table class="table" id="product-table">
-      <thead>
-        <tr>
-          <th>Product ID</th>
-          <th>Product Name</th>
-          <th>Product Description</th>
-          <th>Selling Price</th>
-          <th>Discounted Price</th>
-          <th>Category</th>
-          <th>Quantity Sold</th>
-          <th>Product Likes</th>
-          <th>Product Ratings</th>
-          <th>Product Ratings Amount</th>
-          <th>Shipping Type</th>
-          <th>Ship From</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">All Stores</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Product Slug</th>
+              <th>Product Description</th>
+              <th>Selling Price</th>
+              <th>Discounted Price</th>
+              <th>Category</th>
+              <th>Quantity Sold</th>
+              <th>Product Likes</th>
+              <th>Product Ratings</th>
+              <th>Product Ratings Amount</th>
+              <th>Shipping Type</th>
+              <th>Ship From</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
-
 <!-- /.container-fluid -->
 
 <!-- Footer -->
@@ -90,18 +98,24 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px; /* Adjust the maximum width as per your preference */
+    cursor: pointer;
   }
 
   .table-responsive {
-    max-height: 400px; /* Adjust the maximum height as per your preference */
+    max-height: 600px; /* Adjust the maximum height as per your preference */
     overflow-y: scroll;
+  }
+
+  .expanded-cell {
+    white-space: normal !important;
+    max-width: none !important;
   }
 </style>
 
 <script>
   const mainCategorySelect = document.getElementById('main-category');
   const subCategoryDiv = document.getElementById('sub-categories');
-  const productTable = document.getElementById('product-table');
+  const productTable = document.getElementById('dataTable');
   const subCategories = {{ sub_categories|tojson }};
 
   // Function to update the subcategory checkboxes based on the selected main category
@@ -153,6 +167,7 @@
             const tableCell = document.createElement('td');
             tableCell.textContent = cell;
             tableCell.classList.add('truncate-cell'); // Add the truncate-cell class to limit the cell width
+            tableCell.addEventListener('click', () => toggleCellExpansion(tableCell)); // Add click event listener
             tableRow.appendChild(tableCell);
           });
           productTable.tBodies[0].appendChild(tableRow);
@@ -162,6 +177,11 @@
         // Handle any errors
         console.error(error);
       });
+  }
+
+  // Function to toggle cell expansion
+  function toggleCellExpansion(cell) {
+    cell.classList.toggle('expanded-cell');
   }
 
   // Initialize the subcategory checkboxes based on the default selected main category

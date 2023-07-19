@@ -668,12 +668,12 @@ def get_product_cat():
     params = [f'%{main_category}%']
 
     if sub_categories:
-        query += "or ("
+        query += "AND ("
         for i in range(len(sub_categories)):
             query += "category LIKE %s"
             params.append(f'%{sub_categories[i]}%')
             if i < len(sub_categories) - 1:
-                query += " OR "
+                query += " AND "
         query += ")"
 
     cur.execute(query, params)
