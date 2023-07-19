@@ -697,16 +697,40 @@ def get_product_cat():
 
 
 
-
-
-
-
-
-
-
-
     # Redirect to a success page or perform any other necessary action
     
+
+
+@app.route('/generateotp', methods=['GET','POST'])
+def generateotp():
+        if request.method == 'POST':
+            otp_username = request.form.get('username')
+            print(otp_username)
+            check = db.user.find_one({"username":  otp_username})
+
+                # Generate a random 6-digit password
+            otp = str(random.randint(100000, 999999))
+
+            # Send the 6-digit password to the user's email
+            msg = Message("2FA Verification Code", sender="your-email@example.com", recipients=[check["email"]])
+            msg.body = f"Your verification code is: {otp}"
+            mail.send(msg)
+            # Store the generated OTP in the session
+            session["otp"] = otp
+           
+            return otp
+           
+        else:
+            return render_template('login.html') # Render the login form
+        
+@app.route('/validateotp', methods=['POST'])
+def validate_otp():
+    user_entered_otp = request.form.get('otp')  # Get the OTP submitted by the user
+
+    if user_entered_otp == session['otp']:
+        return jsonify({'result': 'success'})  # OTP is correct
+    else:
+        return jsonify({'result': 'error'})  # OTP is incorrect
 
 @app.route('/success')
 def success():
@@ -726,25 +750,6 @@ def login_page():
         return render_template('login.html')
 
 # Register new user
-@app.route('/generateotp', methods=['GET','POST'])
-def generateotp():
-        if request.method == 'POST':
-            otp_username = request.form.get('username')
-            print(otp_username)
-            check = db.user.find_one({"username":  otp_username})
-
-                # Generate a random 6-digit password
-            otp = str(random.randint(100000, 999999))
-
-            # Send the 6-digit password to the user's email
-            msg = Message("2FA Verification Code", sender="your-email@example.com", recipients=[check["email"]])
-            msg.body = f"Your verification code is: {otp}"
-            mail.send(msg)
-            # Store the generated OTP in the session
-            session["otp"] = otp
-            return redirect(url_for('checkloginpassword'))
-        else:
-            return render_template('login.html') # Render the login form
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -769,10 +774,9 @@ def check_username():
 def login():
     if request.method == "GET":
         if "username" not in session:
-            return render_template("login.html")
+            return render_template('login.html')
         else:
             return redirect(url_for("home"))
-
 
 
 
