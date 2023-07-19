@@ -1,0 +1,169 @@
+{% include 'admin-layout.html' %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <h1 class="h3 mb-2 text-gray-800">Tables</h1>
+
+  <!-- DataTales Example -->
+  <form>
+    <label for="main-category">Main Category:</label>
+    <select id="main-category" onchange="updateSubcategories(); getProductCat();">
+      {% for main_category in main_categories %}
+      <option value="{{ main_category }}">{{ main_category }}</option>
+      {% endfor %}
+    </select>
+
+    <div id="sub-categories">
+      <!-- Subcategory checkboxes will be filled dynamically based on main category selection -->
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table" id="product-table">
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Product Name</th>
+          <th>Product Description</th>
+          <th>Selling Price</th>
+          <th>Discounted Price</th>
+          <th>Category</th>
+          <th>Quantity Sold</th>
+          <th>Product Likes</th>
+          <th>Product Ratings</th>
+          <th>Product Ratings Amount</th>
+          <th>Shipping Type</th>
+          <th>Ship From</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- /.container-fluid -->
+
+<!-- Footer -->
+<footer class="sticky-footer bg-white">
+  <div class="container my-auto">
+    <div class="copyright text-center my-auto">
+      <span>&copy; Your Website 2023</span>
+    </div>
+  </div>
+</footer>
+<!-- End of Footer -->
+
+</div>
+<!-- End of Content Wrapper -->
+
+</div>
+<!-- End of Page Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Bootstrap core JavaScript-->
+<script src="static/vendor/jquery/jquery.min.js"></script>
+<script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="static/js/sb-admin-2.min.js"></script>
+
+<!-- Page level plugins -->
+<script src="static/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="static/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="static/js/demo/datatables-demo.js"></script>
+
+<style>
+  .truncate-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust the maximum width as per your preference */
+  }
+
+  .table-responsive {
+    max-height: 400px; /* Adjust the maximum height as per your preference */
+    overflow-y: scroll;
+  }
+</style>
+
+<script>
+  const mainCategorySelect = document.getElementById('main-category');
+  const subCategoryDiv = document.getElementById('sub-categories');
+  const productTable = document.getElementById('product-table');
+  const subCategories = {{ sub_categories|tojson }};
+
+  // Function to update the subcategory checkboxes based on the selected main category
+  function updateSubcategories() {
+    const selectedMainCategory = mainCategorySelect.value;
+    const subCategoryOptions = subCategories[selectedMainCategory];
+
+    // Clear existing subcategory checkboxes
+    subCategoryDiv.innerHTML = '';
+
+    // Populate subcategory checkboxes based on selected main category
+    subCategoryOptions.forEach(subCategory => {
+      const subCategoryCheckbox = document.createElement('input');
+      subCategoryCheckbox.type = 'checkbox';
+      subCategoryCheckbox.name = 'sub-category';
+      subCategoryCheckbox.value = subCategory;
+      subCategoryCheckbox.id = subCategory;
+      subCategoryCheckbox.onclick = getProductCat; // Add onclick event handler
+
+      const subCategoryLabel = document.createElement('label');
+      subCategoryLabel.htmlFor = subCategory;
+      subCategoryLabel.textContent = subCategory;
+
+      subCategoryDiv.appendChild(subCategoryCheckbox);
+      subCategoryDiv.appendChild(subCategoryLabel);
+      subCategoryDiv.appendChild(document.createElement('br'));
+    });
+  }
+
+  // Function to get the selected main category and subcategories and call the server-side method
+  function getProductCat() {
+    const selectedMainCategory = mainCategorySelect.value;
+    const selectedSubcategories = Array.from(document.querySelectorAll('input[name="sub-category"]:checked')).map(checkbox => checkbox.value);
+
+    // Make an AJAX request to your Flask route to call the method and pass the selected main category and subcategories
+    fetch(`/get-product-cat?main_category=${selectedMainCategory}&sub_categories=${selectedSubcategories.join(',')}`)
+      .then(response => response.json())
+      .then(data => {
+        // Handle the response from the server
+        console.log(data);
+
+        // Clear existing table rows
+        productTable.tBodies[0].innerHTML = '';
+
+        // Populate table with data
+        data.forEach(row => {
+          const tableRow = document.createElement('tr');
+          row.forEach(cell => {
+            const tableCell = document.createElement('td');
+            tableCell.textContent = cell;
+            tableCell.classList.add('truncate-cell'); // Add the truncate-cell class to limit the cell width
+            tableRow.appendChild(tableCell);
+          });
+          productTable.tBodies[0].appendChild(tableRow);
+        });
+      })
+      .catch(error => {
+        // Handle any errors
+        console.error(error);
+      });
+  }
+
+  // Initialize the subcategory checkboxes based on the default selected main category
+  updateSubcategories();
+</script>

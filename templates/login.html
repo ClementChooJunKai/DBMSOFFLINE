@@ -74,15 +74,20 @@
                         id="button"
                         class="btn btn-primary btn-user btn-block"
                       >
-                        <span style="padding-right: 10px;"
-                          ><img
-                            src="../static/img/5.gif"
-                            id="img"
-                            style="display: none;"
-                        /></span>
+                        <span style="padding-right: 10px;"><img src="../static/img/5.gif" id="img" style="display: none;"></span>
                         Login
                       </button>
                     </form>
+
+                    <form class="user" method="POST" action="/generateotp" id="otp">
+                      <input type="hidden" name="username" id="otp-username"> <!-- Hidden input field to store the username -->
+                      <!-- Other form fields and elements go here -->
+                      <button type="submit" name="button" id="button" class="btn btn-primary btn-user btn-block">
+                        <span style="padding-right: 10px;"><img src="../static/img/5.gif" id="img" style="display: none;"></span>
+                        OTP
+                      </button>
+                    </form>
+
                     <hr />
                     <div class="text-center">
                       <a class="small" href="/forgot-password"
@@ -100,20 +105,24 @@
         </div>
       </div>
     </div>
-
-    <!-- Bootstrap core JavaScript-->
     <script src="static/vendor/jquery/jquery.min.js"></script>
     <script src="static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Core plugin JavaScript-->
     <script src="static/vendor/jquery-easing/jquery.easing.min.js"></script>
-
-    <!-- Custom scripts for all pages-->
     <script src="static/js/sb-admin-2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
     <script src="../static/js/checkLoginusername.js"></script>
     <script src="../static/js/checkLoginpassword.js"></script>
+    <script>
+      $(document).ready(function() {
+        // When the username input field is changed
+        $('#username').change(function() {
+          var username = $(this).val(); // Get the entered username
+
+          // Store the username in the hidden input field of the OTP form
+          $('#otp-username').val(username);
+        });
+      });
+    </script>
   </body>
 </html>
