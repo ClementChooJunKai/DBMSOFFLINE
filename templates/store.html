@@ -5,7 +5,7 @@
 
   <!-- Page Heading -->
   <h1 class="h3 mb-2 text-gray-800">Tables</h1>
-  
+
 
   <!-- DataTales Example -->
   <div class="card shadow mb-4">
@@ -21,22 +21,127 @@
               <th>Store Name </th>
               <th>Store Joined Date</th>
               <th>Platform Type</th>
-             
               <th>Compare</th>
-        
+              <th>Watchlist</th>
+
             </tr>
           </thead>
-         
+
           <tbody>
             {% for row in data %}
             <tr>
-              {% for item in row %}
+              {% for item in row[:-1] %}
               <td class="truncate-cell">{{ item }}</td>
               {% endfor %}
               <td><a href="/compare/{{ row[0] }}">Compare</a></td>
+              <td><span
+                  class="fa fa-star {% if row[-1] is not none %}check{% else %}uncheck{% endif %} clickable-span"></span>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
+
+          <style>
+            .check {
+              color: orange;
+            }
+
+            .uncheck {
+              color: grey;
+            }
+
+            .clickable-span {
+              cursor: pointer;
+            }
+
+            .popup {
+              position: absolute;
+              top: 0;
+              left: 0;
+              padding: 10px 20px;
+              background-color: #f9f9f9;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+              z-index: 9999;
+            }
+          </style>
+
+          <script>
+            const starElements = document.querySelectorAll(".clickable-span");
+
+            starElements.forEach(function (starElement) {
+              starElement.addEventListener("click", function (event) {
+                if (this.classList.contains("uncheck")) {
+                  this.classList.remove("uncheck");
+                  this.classList.add("check");
+
+                  // Show the popup to the right of the cursor
+                  showMessage("Added to watchlist!", event.clientX + 10, event.clientY);
+
+                  //Send to controller
+                  const dataToSend = {
+                    // Get the productId from the parent row
+                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                    watched_type: 'store'
+                    // Add more key-value pairs as needed
+                  };
+                  // Make an AJAX request to the Flask server to add the product to the watchlist
+                  fetch('/add_watchlist', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataToSend)
+                  }).then(response => response.json())
+                    .then(data => {
+                      // Do something with the response if needed
+                      console.log(data.message);
+                    });
+
+
+                } else if (this.classList.contains("check")) {
+                  this.classList.remove("check");
+                  this.classList.add("uncheck");
+                  const dataToSend = {
+                    // Get the productId from the parent row
+                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                    watched_type: 'store'
+                    // Add more key-value pairs as needed
+                  };
+
+                  fetch('/remove_watchlist', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataToSend)
+                  }).then(response => response.json())
+                    .then(data => {
+                      // Do something with the response if needed
+                      console.log(data.message);
+                    });
+                  // Optionally, show a different message when star becomes unchecked
+                  showMessage("Removed from watchlist!", event.clientX + 10, event.clientY);
+                }
+              });
+            });
+
+            function showMessage(message, x, y) {
+              const popup = document.createElement("div");
+              popup.className = "popup";
+              popup.innerText = message;
+              document.body.appendChild(popup);
+
+              // Set the position of the popup
+              popup.style.left = x + "px";
+              popup.style.top = y + "px";
+
+              setTimeout(function () {
+                popup.remove();
+              }, 650); // Remove the popup after 0.65 seconds
+            }
+          </script>
         </table>
       </div>
     </div>
@@ -88,7 +193,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px; /* Adjust the maximum width as per your preference */
+    max-width: 150px;
+    /* Adjust the maximum width as per your preference */
   }
 </style>
 

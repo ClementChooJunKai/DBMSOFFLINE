@@ -22,6 +22,7 @@ app.secret_key = "ITSASECRET"
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'root'
+#app.config['MYSQL_PASSWORD'] = 'password' // for nicolas :(
 app.config['MYSQL_DB'] = 'dbms'
 
 # Create MySQL instance
@@ -127,8 +128,35 @@ def home():
             rdiff = "You are below average by : " + \
                 str(round(rating_difference, 2)).strip("-")
 
+        if fetchdata:
+            first_tuple = fetchdata[0]
+            store_id = first_tuple[0]
+
+        query_retrieve_watch_store =  """
+            SELECT s.storeId, s.storeName, s.storejoineddate, s.platformtype, w.watchlistId FROM Store s 
+            INNER JOIN watchlist w 
+            ON s.storeId = w.watched_id
+            WHERE w.storeId = %s
+        """
+        cur.execute(query_retrieve_watch_store, (store_id,))
+        watch_store = cur.fetchall()
+        
+        query_retrieve_watch_product =  """
+            SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom, w.watchlistId
+            FROM product p
+            INNER JOIN watchlist w 
+            ON p.productid = w.watched_id
+            WHERE w.storeId = %s AND w.watched_type ='product'
+        """
+        cur.execute(query_retrieve_watch_product, (store_id,))
+        watch_product = cur.fetchall()
+        count = 0
+        for row in watch_product:
+            count += 1
+            print(count)
         cur.close()
-        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100), difference=rdiff)
+
+        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100), difference=rdiff, watch_store=watch_store, watch_product=watch_product)
     else:
         return render_template('login.html')
 
@@ -346,11 +374,34 @@ def tables():
         username = session['username']
 
         cur = mysql.connection.cursor()
-        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
+        #original query
+        # query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
+        
+        # v1 query
+        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom, w.watchlistId FROM product p INNER JOIN store s ON p.storeid = s.storeid LEFT JOIN watchlist w ON p.productid = w.watched_id WHERE s.storename = %s;"
+        
+        #v2 query
+        # query = """
+        #     SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category,
+        #            p.quantitysold, p.productlikes, p.productratings, p.productratingsamt,
+        #            p.shippingtype, p.shipfrom
+        #     FROM product p
+        #     INNER JOIN store s ON p.storeid = s.storeid
+        #     LEFT JOIN watchlist w ON p.productid = w.watched_id
+        #     WHERE s.storename = %s;
+        # """
+        
         cur.execute(query, (username,))
         fetchdata = cur.fetchall()
-        stripped_data = [[str(item).strip() for item in row]
+        
+        #old
+        # stripped_data = [[str(item).strip() for item in row]
+        #                 for row in fetchdata]
+
+        #new
+        stripped_data = [[str(item).strip() if item is not None else None for item in row]
                          for row in fetchdata]
+
         cur.close()
         return render_template("tables.html", data=stripped_data, username=username)
     else:
@@ -364,11 +415,16 @@ def stores():
         username = session['username']
 
         cur = mysql.connection.cursor()
-        query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
+        #query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
+        query = "SELECT s.storeID, s.storename, s.storejoineddate, s.platformtype, w.watchlistId FROM Store s LEFT JOIN watchlist w ON s.storeID = w.watched_id"
+        
         cur.execute(query)
         fetchdata = cur.fetchall()
-        stripped_data = [[str(item).strip() for item in row]
-                         for row in fetchdata]
+        # stripped_data = [[str(item).strip() for item in row]
+        #                  for row in fetchdata]
+        stripped_data = [[str(item).strip() if item is not None else None for item in row]
+                    for row in fetchdata]
+        
         cur.close()
         return render_template("store.html", data=stripped_data, username=username)
     else:
@@ -875,6 +931,72 @@ def utilities_color():
 def utilities_other():
     return render_template("utilities-other.html")
 
+# Add to wishlist
+@app.route('/add_watchlist', methods=['POST'])
+def add_watchlist():
+    if request.method == 'POST':
+        if 'username' in session:
+            data_received = request.get_json()
+            cur = mysql.connection.cursor()
 
+            username = session['username']
+            query = "SELECT * FROM store WHERE storename = %s;"
+            cur.execute(query, (username,))
+            store_data = cur.fetchone()
+            cur.close()
+            
+            store_id = store_data[0]
+
+            try:
+                cur = mysql.connection.cursor()
+
+                insert_query = "INSERT INTO watchlist (storeId, watched_id, watched_type) VALUES (%s, %s, %s)"
+                print(data_received['watched_id'])
+                print(store_id)
+                print(data_received['watched_type'])
+                cur.execute(insert_query, (store_id,data_received['watched_id'],data_received['watched_type']))
+
+                mysql.connection.commit()
+                cur.close()
+                
+                return jsonify({"message": "Data inserted into the database successfully"})
+            except Exception as e:
+                # Handle the database insertion error
+                mysql.connection.rollback()
+                return jsonify({"error": str(e)})
+            
+@app.route('/remove_watchlist', methods=['POST'])
+def remove_watchlist():
+    if request.method == 'POST':
+        if 'username' in session:
+            data_received = request.get_json()
+            cur = mysql.connection.cursor()
+
+            username = session['username']
+            query = "SELECT * FROM store WHERE storename = %s;"
+            cur.execute(query, (username,))
+            store_data = cur.fetchone()
+            cur.close()
+            
+            store_id = store_data[0]
+
+            try:
+                cur = mysql.connection.cursor()
+
+                delete_query = "DELETE FROM watchlist WHERE storeId=%s AND watched_id=%s AND watched_type=%s"
+                print(data_received['watched_id'])
+                print(store_id)
+                print(data_received['watched_type'])
+                cur.execute(delete_query, (store_id,data_received['watched_id'],data_received['watched_type']))
+
+                mysql.connection.commit()
+                cur.close()
+                
+                return jsonify({"message": "Data deleted from the database successfully"})
+            except Exception as e:
+                # Handle the database deletion error
+                mysql.connection.rollback()
+                return jsonify({"error": str(e)})
+            
 if __name__ == "__main__":
     app.run(debug=True)
