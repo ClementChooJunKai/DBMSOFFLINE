@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from model import *
 from utils import *  
 from pages.revenue import revenue_blueprint
+from pages.products import products_blueprint
 
 import re
 from flask_mail import Mail, Message
@@ -13,6 +14,8 @@ from flask_mail import Mail, Message
 app = Flask(__name__)
 app = configure_app(app)
 app.register_blueprint(revenue_blueprint)
+app.register_blueprint(products_blueprint)
+
 
 # Create MySQL instance
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -21,7 +24,8 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'tay.jiale@gmail.com'
 app.config['MAIL_PASSWORD'] = 'tfclioagsaftodjo'
 mail = Mail(app)
-mysql = MySQL(app)
+mysql.init_app(app)
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -151,45 +155,7 @@ def home():
 
 
 
-# Tables Page
-@app.route('/tables', methods=["GET"])
-def tables():
-    if 'username' in session:
-        username = session['username']
 
-        cur = mysql.connection.cursor()
-        #original query
-        # query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
-        
-        # v1 query
-        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom, w.watchlistId FROM product p INNER JOIN store s ON p.storeid = s.storeid LEFT JOIN watchlist w ON p.productid = w.watched_id WHERE s.storename = %s;"
-        
-        #v2 query
-        # query = """
-        #     SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category,
-        #            p.quantitysold, p.productlikes, p.productratings, p.productratingsamt,
-        #            p.shippingtype, p.shipfrom
-        #     FROM product p
-        #     INNER JOIN store s ON p.storeid = s.storeid
-        #     LEFT JOIN watchlist w ON p.productid = w.watched_id
-        #     WHERE s.storename = %s;
-        # """
-        
-        cur.execute(query, (username,))
-        fetchdata = cur.fetchall()
-        
-        #old
-        # stripped_data = [[str(item).strip() for item in row]
-        #                 for row in fetchdata]
-
-        #new
-        stripped_data = [[str(item).strip() if item is not None else None for item in row]
-                         for row in fetchdata]
-
-        cur.close()
-        return render_template("tables.html", data=stripped_data, username=username)
-    else:
-        return "User not logged in"
 
 
 # Stores Page
@@ -214,108 +180,6 @@ def stores():
     else:
         return "User not logged in"
 
-
-@app.route('/blank/<int:product_id>', methods=['GET'])
-def view_store(product_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productratings,p.productratingsamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
-    fetchdata = cur.fetchall()
-
-    cur.close()
-    return render_template("blank.html", data=fetchdata)
-
-
-@app.route('/optimize/<int:product_id>', methods=['GET'])
-def optimize(product_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productratings,p.productratingsamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
-    fetchdata = cur.fetchall()
-    cur.execute(
-        "SELECT p.category FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;", (product_id,))
-    category_data = cur.fetchall()
-
-    categories = category_data[0][0].split(";")
-
-# Skip the first value of stripped_categories
-# Assume you have an array of stripped categories
-    stripped_categories = [category.strip() for category in categories][3:]
-
-    if stripped_categories:
-        cur.execute("""
-        SELECT p.sellingprice, p.discountedprice,p.productid
-        FROM product p
-        INNER JOIN (
-            SELECT productid
-            FROM product
-            WHERE category LIKE %s
-            AND productratings BETWEEN 1 AND 5
-            ORDER BY productratings DESC
-            LIMIT 10
-        ) AS subquery ON p.productid = subquery.productid
-        INNER JOIN store s ON p.storeid = s.storeid
-        WHERE p.category LIKE %s;
-    """, ['%' + stripped_categories[0] + '%', '%' + stripped_categories[0] + '%'])
-    pricing = cur.fetchall()
-
-    if stripped_categories:
-        # Calculate the average rating for each stripped category
-        average_ratings = []
-        all_ratings = []
-        for category in stripped_categories:
-            cur.execute("""
-                SELECT p.productratings
-                FROM product p
-                INNER JOIN store s ON p.storeid = s.storeid
-                WHERE p.category LIKE %s
-                AND p.productratings BETWEEN 1 AND 5
-                ORDER BY p.productratings DESC
-                
-            """, ['%' + category + '%'])
-            ratings = cur.fetchall()
-            all_ratings.extend([rating[0] for rating in ratings])
-            average_rating = sum([rating[0] for rating in ratings]) / \
-                len(ratings) if len(ratings) > 0 else 0
-            average_ratings.append(average_rating)
-
-    # Fetch top-rated products and their product names
-    cur.execute("""
-        SELECT p.ProductName
-        FROM product p
-        INNER JOIN (
-            SELECT productid
-            FROM product
-            WHERE category LIKE %s
-            AND productratings BETWEEN 1 AND 5
-            ORDER BY productratings DESC
-            LIMIT 10
-        ) AS subquery ON p.productid = subquery.productid
-        INNER JOIN store s ON p.storeid = s.storeid
-        WHERE p.category LIKE %s;
-    """, ['%' + stripped_categories[0] + '%', '%' + stripped_categories[0] + '%'])
-    top_rated_products = cur.fetchall()
-
-    cur.close()
-    product_keywords = []
-    for product in top_rated_products:
-        product_name = product[0]
-        tokens = word_tokenize(product_name)  # Tokenization
-        product_keywords.append(tokens)
-
-    # Flatten the list of product keywords
-    flattened_keywords = [
-        keyword for sublist in product_keywords for keyword in sublist]
-
-    # Count the frequency of each keyword
-    keyword_counts = Counter(flattened_keywords)
-
-    # Set the frequency threshold
-    frequency_threshold = 2
-
-    # Filter out keywords that don't meet the frequency threshold and exclude symbols/numbers
-    filtered_common_keywords = [(keyword, count) for keyword, count in keyword_counts.items(
-    ) if count >= frequency_threshold and re.match(r'^[a-zA-Z]+$', keyword)]
-
-    return render_template("optimize.html", data=fetchdata, price=pricing, keywords=filtered_common_keywords, ratingData=all_ratings, avgrating=round(average_rating, 2))
 
 
 @app.route('/compare/<int:store_id>', methods=['GET'])
@@ -531,10 +395,6 @@ def get_product_cat():
 
     # Return JSON response
     return json.dumps(serialized_data)
-
-
-
-
 
 
     # Redirect to a success page or perform any other necessary action

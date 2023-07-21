@@ -8,7 +8,11 @@ from itertools import count
 import nltk
 from nltk.tokenize import word_tokenize
 import re
+# database.py
+from flask_mysqldb import MySQL
 
+# Create the 'mysql' instance
+mysql = MySQL()
 # Database Helper Functions (move functions from helpers.database here)
 from helpers.database import *
 from helpers.hashpass import *
