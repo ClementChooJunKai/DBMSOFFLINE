@@ -136,6 +136,7 @@ def revenue_page():
             'as': 'product'
         }
     },
+    
     {
         '$unwind': '$product'
     },
@@ -330,7 +331,7 @@ def revenue_page():
     # for doc in goal_data:
     #  print(doc)
 	
-    return render_template("revenue.html", revenue_data=revenue_data, username=username,  quantity_sold_data=quantity_sold_data, price_range_data=price_range_data, forecast_data=forecast_data, goal_data=goal_data, sales_per_month=sales_per_month, last_month=last_month, months_to_goal=months_to_goal, combined_data=combined_data_str_keys)
+    return render_template("revenue/revenue.html", revenue_data=revenue_data, username=username,  quantity_sold_data=quantity_sold_data, price_range_data=price_range_data, forecast_data=forecast_data, goal_data=goal_data, sales_per_month=sales_per_month, last_month=last_month, months_to_goal=months_to_goal, combined_data=combined_data_str_keys)
 
 if __name__ == "__main__":
     app.run(debug=True)

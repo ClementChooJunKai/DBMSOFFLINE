@@ -1,13 +1,16 @@
 # utils.py
 
 from collections import Counter
-import decimal
+
+
+import json
 import pandas as pd
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 from itertools import count
 import nltk
 from nltk.tokenize import word_tokenize
 import re
+import decimal
 # database.py
 from flask_mysqldb import MySQL
 

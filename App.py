@@ -4,17 +4,20 @@ from model import *
 from utils import *  
 from pages.revenue import revenue_blueprint
 from pages.products import products_blueprint
-
+from pages.store import store_blueprint
+from pages.category import category_blueprint
+from decimal import Decimal
 import re
 from flask_mail import Mail, Message
-
-
 
 
 app = Flask(__name__)
 app = configure_app(app)
 app.register_blueprint(revenue_blueprint)
 app.register_blueprint(products_blueprint)
+app.register_blueprint(store_blueprint)
+app.register_blueprint(category_blueprint)
+
 
 
 # Create MySQL instance
@@ -156,249 +159,6 @@ def home():
 
 
 
-
-
-# Stores Page
-@app.route('/Stores', methods=["GET"])
-def stores():
-    if 'username' in session:
-        username = session['username']
-
-        cur = mysql.connection.cursor()
-        #query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
-        query = "SELECT s.storeID, s.storename, s.storejoineddate, s.platformtype, w.watchlistId FROM Store s LEFT JOIN watchlist w ON s.storeID = w.watched_id"
-        
-        cur.execute(query)
-        fetchdata = cur.fetchall()
-        # stripped_data = [[str(item).strip() for item in row]
-        #                  for row in fetchdata]
-        stripped_data = [[str(item).strip() if item is not None else None for item in row]
-                    for row in fetchdata]
-        
-        cur.close()
-        return render_template("store.html", data=stripped_data, username=username)
-    else:
-        return "User not logged in"
-
-
-
-@app.route('/compare/<int:store_id>', methods=['GET'])
-def compare(store_id):
-    username = session['username']
-    cur = mysql.connection.cursor()
-    cur.execute('''
-        SELECT
-          ranking,
-          storeId,
-          storeName,
-          compositeScore
-          
-        FROM (
-          SELECT
-            storeId,
-            storeName,
-            compositeScore,
-            RANK() OVER (ORDER BY compositeScore DESC) AS ranking
-          FROM (
-            SELECT
-              storeId,
-              storeName,
-              (
-                (storeRating / 5) * 0.5 +
-                (storeAmtRating / max_storeAmtRating) * 0.1 +
-                (productCount / max_productCount) * 0.15 +
-                (storeFollowers / max_storeFollowers) * 0.15 +
-                (chatPerformance ) * 0.1 
-            
-              ) AS compositeScore
-            FROM Store,
-              (SELECT
-                MAX(storeAmtRating) AS max_storeAmtRating,
-                MAX(productCount) AS max_productCount,
-                MAX(storeFollowers) AS max_storeFollowers
-              FROM Store) AS max_values
-          ) AS ranked_shops
-        ) AS ranked_stores
-        WHERE storeId = %s;
-    ''', (store_id,))
-
-    fetchdata = cur.fetchall()
-
-    cur.execute('''
-        SELECT
-          ranking,
-          storeId,
-          storeName,
-          compositeScore
-        FROM (
-          SELECT
-            storeId,
-            storeName,
-            compositeScore,
-            RANK() OVER (ORDER BY compositeScore DESC) AS ranking
-          FROM (
-            SELECT
-              storeId,
-              storeName,
-              (
-                (storeRating / 5) * 0.5 +
-                (storeAmtRating / max_storeAmtRating) * 0.1 +
-                (productCount / max_productCount) * 0.15 +
-                (storeFollowers / max_storeFollowers) * 0.15 +
-                (chatPerformance ) * 0.1 
-            
-              ) AS compositeScore
-            FROM Store,
-              (SELECT
-                MAX(storeAmtRating) AS max_storeAmtRating,
-                MAX(productCount) AS max_productCount,
-                MAX(storeFollowers) AS max_storeFollowers
-              FROM Store) AS max_values
-          ) AS ranked_shops
-        ) AS ranked_stores
-        WHERE storeName = %s;
-    ''', (username,))
-    owndata = cur.fetchall()
-    cur.execute('''SELECT * FROM Store WHERE storeId = %s;''', (store_id,))
-    cstore = cur.fetchall()
-    cur.execute('''SELECT * FROM Store WHERE storeName = %s;''', (username,))
-    ownstore = cur.fetchall()
-
-    return render_template("compare.html", cstore=cstore, data=fetchdata, compscore=round(fetchdata[0][3], 3), storecomp=round(owndata[0][3], 3), storedata=owndata, selfdata=ownstore)
-
-
-@app.route('/delete_product', methods=['POST'])
-def delete_product():
-    product_id = request.form.get('id')
-    print(product_id)
-    # Connect to MySQL
-    conn = mysql.connection
-    cursor = conn.cursor()
-
-    try:
-        # Execute the delete query
-        query = "DELETE FROM product WHERE productid = %s"
-        cursor.execute(query, (product_id,))
-        conn.commit()
-        return redirect('/success')
-    except Exception as error:
-        # Handle any errors that occur during the deletion
-        print(f"Error deleting product: {error}")
-        return redirect('/404')
-
-    finally:
-        # Close the cursor
-        cursor.close()
-
-
-@app.route('/update_product', methods=['POST'])
-def update_product():
-    # Retrieve the form data
-    id = request.form['id']
-    product_name = request.form['ProductName']
-    product_description = request.form['ProductDescription']
-    selling_price = decimal.Decimal(request.form['sellingPrice'])
-
-    discountPercentage = decimal.Decimal(request.form['discountPercentage'])
-    print(discountPercentage)
-    discounted_price = (selling_price*(100-discountPercentage))/100
-    quantity = request.form['Quantity']
-    free_shipping = request.form.get('freeShipping')  # Checkbox value
-
-    # Perform the update operation using the retrieved data and the ID
-    cur = mysql.connection.cursor()
-    sql = "UPDATE product SET productName = %s, productDesc = %s, sellingprice = %s, discountedprice = %s, quantitysold = %s, shippingtype = %s WHERE productId = %s"
-    params = (product_name, product_description, selling_price,
-              discounted_price, quantity, free_shipping, id)
-
-    print("SQL Statement:", sql)
-    print("Parameters:", params)
-
-    cur.execute(sql, params)
-
-    print()
-    mysql.connection.commit()
-    cur.close()
-
-    # Redirect to a success page or perform any other necessary action
-    return redirect('/success')
-
-@app.route('/getCatP')
-def getcat():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT category FROM product p INNER JOIN store s ON p.storeId = s.storeId WHERE s.storeName = %s", (session['username'],))
-    fetchdata = cur.fetchall()
-    cur.close()
-
-    category_dict = {}
-
-    for row in fetchdata:
-        category_string = row[0]
-        category_values = category_string.split(';')
-
-        main_category = category_values[2]
-        subcategories = category_values[3:]
-
-        main_category_dict = category_dict.setdefault(main_category, set())
-
-        for subcategory in subcategories:
-            if ':' in subcategory:
-                break  # Stop processing subcategories when a tuple is encountered
-
-            main_category_dict.add(subcategory)
-
-    main_categories = list(category_dict.keys())  # Get the main categories
-    sub_categories = {main_category: list(subs) for main_category, subs in category_dict.items()}  # Convert subcategories to dictionary format
-
-    return render_template('CatProducts.html', main_categories=main_categories, sub_categories=sub_categories)
-
-
-from decimal import Decimal
-import json
-
-@app.route('/get-product-cat', methods=["GET"])
-def get_product_cat():
-    main_category = request.args.get('main_category')
-    sub_categories = request.args.getlist('sub_categories')
-
-    cur = mysql.connection.cursor()
-
-    # Construct the SQL query based on the selected main category and subcategories
-    query = """
-        SELECT *
-        FROM product
-        WHERE category LIKE %s
-    """
-    params = [f'%{main_category}%']
-
-    if sub_categories:
-        query += "AND ("
-        for i in range(len(sub_categories)):
-            query += "category LIKE %s"
-            params.append(f'%{sub_categories[i]}%')
-            if i < len(sub_categories) - 1:
-                query += " AND "
-        query += ")"
-
-    cur.execute(query, params)
-    print(query, params)
-
-    fetchdata = cur.fetchall()
-
-    cur.close()
-
-    # Convert Decimal objects to string representations
-    serialized_data = []
-    for row in fetchdata:
-        serialized_row = [str(item) if isinstance(item, Decimal) else item for item in row]
-        serialized_data.append(serialized_row)
-
-    # Return JSON response
-    return json.dumps(serialized_data)
-
-
-    # Redirect to a success page or perform any other necessary action
-    
 
 
 @app.route('/generateotp', methods=['GET','POST'])
@@ -549,31 +309,6 @@ def charts():
     return render_template("charts.html")
 
 
-# Utilities-animation
-@app.route('/utilities-animation', methods=["GET"])
-def utilities_animation():
-    return render_template("utilities-animation.html")
-
-# Utilities-border
-
-
-@app.route('/utilities-border', methods=["GET"])
-def utilities_border():
-    return render_template("utilities-border.html")
-
-# Utilities-color
-
-
-@app.route('/utilities-color', methods=["GET"])
-def utilities_color():
-    return render_template("utilities-color.html")
-
-# Utilities-other
-
-
-@app.route('/utilities-other', methods=["GET"])
-def utilities_other():
-    return render_template("utilities-other.html")
 
 # Add to wishlist
 @app.route('/add_watchlist', methods=['POST'])

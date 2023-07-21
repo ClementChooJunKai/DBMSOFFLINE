@@ -1,7 +1,9 @@
+
 from flask import Flask, Blueprint, render_template, request, redirect, url_for, session
 from model import *
 from utils import *
 
+from decimal import Decimal
 
 products_blueprint = Blueprint('products', __name__)
 
@@ -42,7 +44,7 @@ def products_page():
                          for row in fetchdata]
 
         cur.close()
-        return render_template("products.html", data=stripped_data, username=username)
+        return render_template("products/products.html", data=stripped_data, username=username)
     else:
         return "User not logged in"
     
@@ -56,7 +58,7 @@ def view_store(product_id):
     fetchdata = cur.fetchall()
 
     cur.close()
-    return render_template("editProduct.html", data=fetchdata)
+    return render_template("products/editProduct.html", data=fetchdata)
 
 
 @products_blueprint.route('/optimizeProduct/<int:product_id>', methods=['GET'])
@@ -149,4 +151,61 @@ def optimize(product_id):
     filtered_common_keywords = [(keyword, count) for keyword, count in keyword_counts.items(
     ) if count >= frequency_threshold and re.match(r'^[a-zA-Z]+$', keyword)]
 
-    return render_template("optimizeProduct.html", data=fetchdata, price=pricing, keywords=filtered_common_keywords, ratingData=all_ratings, avgrating=round(average_rating, 2))
+    return render_template("products/optimizeProduct.html", data=fetchdata, price=pricing, keywords=filtered_common_keywords, ratingData=all_ratings, avgrating=round(average_rating, 2))
+
+
+@products_blueprint.route('/delete_product', methods=['POST'])
+def delete_product():
+    product_id = request.form.get('id')
+    print(product_id)
+    # Connect to MySQL
+    conn = mysql.connection
+    cursor = conn.cursor()
+
+    try:
+        # Execute the delete query
+        query = "DELETE FROM product WHERE productid = %s"
+        cursor.execute(query, (product_id,))
+        conn.commit()
+        return redirect('/success')
+    except Exception as error:
+        # Handle any errors that occur during the deletion
+        print(f"Error deleting product: {error}")
+        return redirect('/404')
+
+    finally:
+        # Close the cursor
+        cursor.close()
+
+
+@products_blueprint.route('/update_product', methods=['POST'])
+def update_product():
+    # Retrieve the form data
+    id = request.form['id']
+    product_name = request.form['ProductName']
+    product_description = request.form['ProductDescription']
+    selling_price = decimal.Decimal(request.form['sellingPrice'])
+
+    discountPercentage = decimal.Decimal(request.form['discountPercentage'])
+    print(discountPercentage)
+    discounted_price = (selling_price*(100-discountPercentage))/100
+    quantity = request.form['Quantity']
+    free_shipping = request.form.get('freeShipping')  # Checkbox value
+
+    # Perform the update operation using the retrieved data and the ID
+    cur = mysql.connection.cursor()
+    sql = "UPDATE product SET productName = %s, productDesc = %s, sellingprice = %s, discountedprice = %s, quantitysold = %s, shippingtype = %s WHERE productId = %s"
+    params = (product_name, product_description, selling_price,
+              discounted_price, quantity, free_shipping, id)
+
+    print("SQL Statement:", sql)
+    print("Parameters:", params)
+
+    cur.execute(sql, params)
+
+    print()
+    mysql.connection.commit()
+    cur.close()
+
+    # Redirect to a success page or perform any other necessary action
+    return redirect('/success')
