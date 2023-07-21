@@ -49,7 +49,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="chart-bar">
-                        <canvas id="forecastBarChart"></canvas>
+                        <canvas id="productBarChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -167,7 +167,8 @@
                 labels: productName,
                 datasets: [{
                     data: revenues,
-                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#8e44ad', '#27ae60', '#3498db', '#f39c12', '#9b59b6'],
+
                     hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dbb10f', '#d32e2b'],
                     hoverBorderColor: 'rgba(234, 236, 244, 1)',
                 }],
@@ -212,9 +213,8 @@
                 datasets: [{
                     label: 'Quantity Sold',
                     data: quantitySold,
-                    backgroundColor: '#4e73df',
-                    hoverBackgroundColor: '#2e59d9',
-                    borderColor: 'rgba(78, 115, 223, 0.8)',
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#8e44ad', '#27ae60', '#3498db', '#f39c12', '#9b59b6'],
+
                     borderWidth: 1,
                     maxBarThickness: 50,
                 }],
@@ -269,191 +269,76 @@
 
         });
 
-        //--------------
-
-        // // console.log(priceRangeData);
-        // var priceRangeData = JSON.parse('{{ price_range_data|tojson|safe }}');
-        // // console.log(priceRangeData);
-
-        // // Extract the price range categories and revenue data from the fetched data
-        // var priceRangeCategories = priceRangeData.map(function (item) {
-        //   return item._id;
-        // });
-
-        // var datasets = [];
-        // var backgroundColors = {
-        //   Low: '#1cc88a',
-        //   Medium: '#f6c23e',
-        //   High: '#e74a3b',
-        //   Other: '#4e73df'
-        // };
-
-        // priceRangeData.forEach(function (item, index) {
-        //   var productNames = item.products.map(function (product) {
-        //     return product.productName;
-        //   });
-
-        //   var revenues = item.products.map(function (product) {
-        //     return product.revenue;
-        //   });
-
-        //   var productDatasets = productNames.map(function (productName) {
-        //     return {
-        //       label: productName,
-        //       data: [],
-        //       backgroundColor: backgroundColors[item._id],
-        //       borderColor: 'rgba(78, 115, 223, 0.8)',
-        //       borderWidth: 1,
-        //       hoverBackgroundColor: 'rgba(78, 115, 223, 0.8)',
-        //       hoverBorderColor: 'rgba(78, 115, 223, 1)'
-        //     };
-        //   });
-
-        //   item.products.forEach(function (product) {
-        //     var datasetIndex = productNames.indexOf(product.productName);
-        //     productDatasets[datasetIndex].data.push(product.revenue);
-        //   });
-
-        //   // Filter out products with zero revenue
-        //   productDatasets = productDatasets.filter(function (dataset) {
-        //     return dataset.data.length > 0;
-        //   });
-
-        //   datasets.push(...productDatasets);
-        // });
-
-        // var ctx = document.getElementById('myRevenueBarChart').getContext('2d');
-        // var myBarChart = new Chart(ctx, {
-        //   type: 'bar',
-        //   data: {
-        //     labels: priceRangeCategories,
-        //     datasets: datasets
-        //   },
-        //   options: {
-        //     maintainAspectRatio: false,
-        //     plugins: {
-        //       legend: {
-        //         display: true,
-        //         position: 'bottom' // Adjust legend position as needed
-        //       }
-        //     },
-        //     scales: {
-        //       x: {
-        //         stacked: true,
-        //         ticks: {
-        //           beginAtZero: true
-        //         }
-        //       },
-        //       y: {
-        //         stacked: true,
-        //         ticks: {
-        //           beginAtZero: true
-        //         }
-        //       }
-        //     },
-        //     tooltips: {
-        //       mode: 'index',
-        //       intersect: false,
-        //       callbacks: {
-        //         title: function (context) {
-        //           var priceRange = context[0].label;
-        //           return 'Price Range: ' + priceRange;
-        //         },
-        //         label: function (context) {
-        //           var datasetIndex = context.datasetIndex;
-        //           var index = context.dataIndex;
-        //           var productName = datasets[datasetIndex].label;
-        //           var revenue = context.formattedValue;
-        //           return productName + ': $' + revenue;
-        //         }
-        //       }
-        //     }
-
-        //   }
-
-        // });
 
 
+var product_data = JSON.parse('{{ each_product_sold_data|tojson|safe }}');
+var months = [...new Set(product_data.map(item => item.month))];
+var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var labeledMonths = months.map(month => monthNames[month - 1]);
 
-        var forecast_data = JSON.parse('{{ forecast_data|tojson|safe }}');
-        var months = [...new Set(forecast_data.map(item => item.month))];
-        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        var labeledMonths = months.map(month => monthNames[month - 1]);
+// Create an empty object to store datasets for each product
+var datasetsMap = {};
 
-        // Create an empty object to store datasets for each product
-        var datasetsMap = {};
+// Iterate over the forecast data and organize the data into datasets
+for (var i = 0; i < product_data.length; i++) {
+    var entry = product_data[i];
+    var month = entry.month;
+    var productName = entry.productName;
+    var productId = entry.productId;
+    var quantitySold = entry.quantitySold;
 
-        // Iterate over the forecast data and organize the data into datasets
-        for (var i = 0; i < forecast_data.length; i++) {
-            var entry = forecast_data[i];
-            var month = entry.month;
-            var productName = entry.productName;
-            var productId = entry.productId;
-            var quantitySold = entry.quantitySold;
+    // If the dataset for the product doesn't exist, create it
+    if (!datasetsMap[productId]) {
+        datasetsMap[productId] = {
+            label: productName,
+            data: Array(months.length).fill(0), // Initialize data array with zeros for each month
+            backgroundColor: 'rgba(0, 0, 0, 0)', // Set transparent background for the area chart
+            borderColor: getRandomColor(),
+            fill: true // Enable area fill
+        };
+    }
 
-            // If the dataset for the product doesn't exist, create it
-            if (!datasetsMap[productId]) {
-                datasetsMap[productId] = {
-                    label: productName,
-                    data: Array(months.length).fill(0), // Initialize data array with zeros for each month
-                    backgroundColor: getRandomColor()
-                };
+    // Update the quantitySold for the corresponding month
+    datasetsMap[productId].data[months.indexOf(month)] = quantitySold;
+}
+
+// Convert the datasetsMap object into an array of datasets
+var datasets = Object.values(datasetsMap);
+
+var ctx = document.getElementById('productBarChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'line', // Change the chart type to 'line'
+    data: {
+        labels: labeledMonths,
+        datasets: datasets
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
             }
-
-            // Update the quantitySold for the corresponding month
-            datasetsMap[productId].data[months.indexOf(month)] = quantitySold;
-        }
-
-        // Convert the datasetsMap object into an array of datasets
-        var datasets = Object.values(datasetsMap);
-
-        var ctx = document.getElementById('forecastBarChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labeledMonths,
-                datasets: datasets
+        },
+        scales: {
+            x: {
+                stacked: true,
+                grid: {
+                    display: false
+                }
             },
-            options: {
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
+            y: {
+                stacked: true,
+                grid: {
+                    display: true
                 },
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: {
-                            display: true
-                        },
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }
+                ticks: {
+                    beginAtZero: true
                 }
             }
-        });
-
-
-
-
-
-
-
-
-
-
-
-
-
+        }
+    }
+});
 
 
 

@@ -71,63 +71,7 @@ def revenue_page():
         }
     ]
 
-    price_range_pipeline = [
-        {
-            '$lookup': {
-                'from': 'store',
-                'localField': 'StoreID',
-                'foreignField': 'StoreID',
-                'as': 'store'
-            }
-        },
-        {
-            '$match': {
-                'store.storeName': username
-            }
-        },
-        {
-            '$project': {
-                'productName': 1,
-                'revenue': {'$multiply': ['$QuantitySold', '$DiscountedPrice']},
-                'priceRange': {
-                    '$switch': {
-                        'branches': [
-                            {'case': {'$and': [{'$gte': ['$DiscountedPrice', 0]}, {
-                                '$lt': ['$DiscountedPrice', 2]}]}, 'then': 'Low'},
-                            {'case': {'$and': [{'$gte': ['$DiscountedPrice', 3]}, {
-                                '$lt': ['$DiscountedPrice', 5]}]}, 'then': 'Medium'},
-                            {'case': {'$and': [{'$gte': ['$DiscountedPrice', 5]}, {
-                                '$lt': ['$DiscountedPrice', 7]}]}, 'then': 'High'}
-                        ],
-                        'default': 'Other'
-                    }
-                }
-            }
-        },
-        {
-            '$group': {
-                '_id': {
-                    'priceRange': '$priceRange',
-                    'productName': '$productName'
-                },
-                'revenue': {'$sum': '$revenue'}
-            }
-        },
-        {
-            '$group': {
-                '_id': '$_id.priceRange',
-                'products': {'$push': {'productName': '$_id.productName', 'revenue': '$revenue'}},
-                'totalRevenue': {'$sum': '$revenue'}
-            }
-        },
-        {
-            '$sort': {
-                '_id': 1
-            }
-        }
-    ]
-
-    forecast_pipeline = [
+    each_product_sold_pipeline = [
     {
         '$lookup': {
             'from': 'product',
@@ -240,9 +184,9 @@ def revenue_page():
 
     revenue_data = list(db.product.aggregate(revenue_pipeline))
     quantity_sold_data = list(db.product.aggregate(quantity_sold_pipeline))
-    price_range_data = list(db.products.aggregate(price_range_pipeline))
+
     print('Username:', username)
-    forecast_data = list(db.order.aggregate(forecast_pipeline))
+    each_product_sold_data = list(db.order.aggregate(each_product_sold_pipeline))
     goal_data = list(db.order.aggregate(goal_pipeline))
 
     sales_per_month = 0
@@ -326,12 +270,12 @@ def revenue_page():
     #     # print('Total Quantity:', doc['totalQuantitySold'])
     #     print(doc['productName'])
 
-    # for doc in forecast_data:
+    # for doc in product_data:
     #  print(doc)
     # for doc in goal_data:
     #  print(doc)
 	
-    return render_template("revenue/revenue.html", revenue_data=revenue_data, username=username,  quantity_sold_data=quantity_sold_data, price_range_data=price_range_data, forecast_data=forecast_data, goal_data=goal_data, sales_per_month=sales_per_month, last_month=last_month, months_to_goal=months_to_goal, combined_data=combined_data_str_keys)
+    return render_template("revenue/revenue.html", revenue_data=revenue_data, username=username,  quantity_sold_data=quantity_sold_data,  each_product_sold_data=each_product_sold_data, goal_data=goal_data, sales_per_month=sales_per_month, last_month=last_month, months_to_goal=months_to_goal, combined_data=combined_data_str_keys)
 
 if __name__ == "__main__":
     app.run(debug=True)
