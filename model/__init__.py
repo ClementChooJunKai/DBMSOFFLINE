@@ -1,6 +1,6 @@
 import random
 from flask_mysqldb import MySQL
-from App import app
+from app import app
 from flask import Flask, session, redirect, url_for, request
 from helpers.database import *
 from helpers.hashpass import *
