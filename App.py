@@ -4,11 +4,23 @@ from model import *
 from utils import *  
 from pages.revenue import revenue_blueprint
 
+import re
+from flask_mail import Mail, Message
+
+
+
+
 app = Flask(__name__)
 app = configure_app(app)
 app.register_blueprint(revenue_blueprint)
 
 # Create MySQL instance
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'tay.jiale@gmail.com'
+app.config['MAIL_PASSWORD'] = 'tfclioagsaftodjo'
+mail = Mail(app)
 mysql = MySQL(app)
 
 
@@ -105,8 +117,35 @@ def home():
             rdiff = "You are below average by : " + \
                 str(round(rating_difference, 2)).strip("-")
 
+        if fetchdata:
+            first_tuple = fetchdata[0]
+            store_id = first_tuple[0]
+
+        query_retrieve_watch_store =  """
+            SELECT s.storeId, s.storeName, s.storejoineddate, s.platformtype, w.watchlistId FROM Store s 
+            INNER JOIN watchlist w 
+            ON s.storeId = w.watched_id
+            WHERE w.storeId = %s
+        """
+        cur.execute(query_retrieve_watch_store, (store_id,))
+        watch_store = cur.fetchall()
+        
+        query_retrieve_watch_product =  """
+            SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom, w.watchlistId
+            FROM product p
+            INNER JOIN watchlist w 
+            ON p.productid = w.watched_id
+            WHERE w.storeId = %s AND w.watched_type ='product'
+        """
+        cur.execute(query_retrieve_watch_product, (store_id,))
+        watch_product = cur.fetchall()
+        count = 0
+        for row in watch_product:
+            count += 1
+            print(count)
         cur.close()
-        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100), difference=rdiff)
+
+        return render_template('index.html', username=username, data=fetchdata, performance=int(fetchdata[0][8] * 100), difference=rdiff, watch_store=watch_store, watch_product=watch_product)
     else:
         return render_template('login.html')
 
@@ -119,11 +158,34 @@ def tables():
         username = session['username']
 
         cur = mysql.connection.cursor()
-        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
+        #original query
+        # query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE s.storename = %s;"
+        
+        # v1 query
+        query = "SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category, p.quantitysold, p.productlikes, p.productratings, p.productratingsamt, p.shippingtype, p.shipfrom, w.watchlistId FROM product p INNER JOIN store s ON p.storeid = s.storeid LEFT JOIN watchlist w ON p.productid = w.watched_id WHERE s.storename = %s;"
+        
+        #v2 query
+        # query = """
+        #     SELECT p.productid, p.ProductName, p.Productdesc, p.sellingprice, p.discountedprice, p.category,
+        #            p.quantitysold, p.productlikes, p.productratings, p.productratingsamt,
+        #            p.shippingtype, p.shipfrom
+        #     FROM product p
+        #     INNER JOIN store s ON p.storeid = s.storeid
+        #     LEFT JOIN watchlist w ON p.productid = w.watched_id
+        #     WHERE s.storename = %s;
+        # """
+        
         cur.execute(query, (username,))
         fetchdata = cur.fetchall()
-        stripped_data = [[str(item).strip() for item in row]
+        
+        #old
+        # stripped_data = [[str(item).strip() for item in row]
+        #                 for row in fetchdata]
+
+        #new
+        stripped_data = [[str(item).strip() if item is not None else None for item in row]
                          for row in fetchdata]
+
         cur.close()
         return render_template("tables.html", data=stripped_data, username=username)
     else:
@@ -137,11 +199,16 @@ def stores():
         username = session['username']
 
         cur = mysql.connection.cursor()
-        query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
+        #query = "SELECT storeID,storename,storejoineddate,platformtype FROM store;"
+        query = "SELECT s.storeID, s.storename, s.storejoineddate, s.platformtype, w.watchlistId FROM Store s LEFT JOIN watchlist w ON s.storeID = w.watched_id"
+        
         cur.execute(query)
         fetchdata = cur.fetchall()
-        stripped_data = [[str(item).strip() for item in row]
-                         for row in fetchdata]
+        # stripped_data = [[str(item).strip() for item in row]
+        #                  for row in fetchdata]
+        stripped_data = [[str(item).strip() if item is not None else None for item in row]
+                    for row in fetchdata]
+        
         cur.close()
         return render_template("store.html", data=stripped_data, username=username)
     else:
@@ -392,6 +459,118 @@ def update_product():
     # Redirect to a success page or perform any other necessary action
     return redirect('/success')
 
+@app.route('/getCatP')
+def getcat():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT category FROM product p INNER JOIN store s ON p.storeId = s.storeId WHERE s.storeName = %s", (session['username'],))
+    fetchdata = cur.fetchall()
+    cur.close()
+
+    category_dict = {}
+
+    for row in fetchdata:
+        category_string = row[0]
+        category_values = category_string.split(';')
+
+        main_category = category_values[2]
+        subcategories = category_values[3:]
+
+        main_category_dict = category_dict.setdefault(main_category, set())
+
+        for subcategory in subcategories:
+            if ':' in subcategory:
+                break  # Stop processing subcategories when a tuple is encountered
+
+            main_category_dict.add(subcategory)
+
+    main_categories = list(category_dict.keys())  # Get the main categories
+    sub_categories = {main_category: list(subs) for main_category, subs in category_dict.items()}  # Convert subcategories to dictionary format
+
+    return render_template('CatProducts.html', main_categories=main_categories, sub_categories=sub_categories)
+
+
+from decimal import Decimal
+import json
+
+@app.route('/get-product-cat', methods=["GET"])
+def get_product_cat():
+    main_category = request.args.get('main_category')
+    sub_categories = request.args.getlist('sub_categories')
+
+    cur = mysql.connection.cursor()
+
+    # Construct the SQL query based on the selected main category and subcategories
+    query = """
+        SELECT *
+        FROM product
+        WHERE category LIKE %s
+    """
+    params = [f'%{main_category}%']
+
+    if sub_categories:
+        query += "AND ("
+        for i in range(len(sub_categories)):
+            query += "category LIKE %s"
+            params.append(f'%{sub_categories[i]}%')
+            if i < len(sub_categories) - 1:
+                query += " AND "
+        query += ")"
+
+    cur.execute(query, params)
+    print(query, params)
+
+    fetchdata = cur.fetchall()
+
+    cur.close()
+
+    # Convert Decimal objects to string representations
+    serialized_data = []
+    for row in fetchdata:
+        serialized_row = [str(item) if isinstance(item, Decimal) else item for item in row]
+        serialized_data.append(serialized_row)
+
+    # Return JSON response
+    return json.dumps(serialized_data)
+
+
+
+
+
+
+    # Redirect to a success page or perform any other necessary action
+    
+
+
+@app.route('/generateotp', methods=['GET','POST'])
+def generateotp():
+        if request.method == 'POST':
+            otp_username = request.form.get('username')
+            print(otp_username)
+            check = db.user.find_one({"username":  otp_username})
+
+                # Generate a random 6-digit password
+            otp = str(random.randint(100000, 999999))
+
+            # Send the 6-digit password to the user's email
+            msg = Message("2FA Verification Code", sender="your-email@example.com", recipients=[check["email"]])
+            msg.body = f"Your verification code is: {otp}"
+            mail.send(msg)
+            # Store the generated OTP in the session
+            session["otp"] = otp
+           
+            return otp
+           
+        else:
+            return render_template('login.html') # Render the login form
+        
+@app.route('/validateotp', methods=['POST'])
+def validate_otp():
+    user_entered_otp = request.form.get('otp')  # Get the OTP submitted by the user
+
+    if user_entered_otp == session['otp']:
+        return jsonify({'result': 'success'})  # OTP is correct
+    else:
+        return jsonify({'result': 'error'})  # OTP is incorrect
 
 @app.route('/success')
 def success():
@@ -435,9 +614,11 @@ def check_username():
 def login():
     if request.method == "GET":
         if "username" not in session:
-            return render_template("login.html")
+            return render_template('login.html')
         else:
             return redirect(url_for("home"))
+
+
 
 # Check if username exists
 
@@ -534,6 +715,72 @@ def utilities_color():
 def utilities_other():
     return render_template("utilities-other.html")
 
+# Add to wishlist
+@app.route('/add_watchlist', methods=['POST'])
+def add_watchlist():
+    if request.method == 'POST':
+        if 'username' in session:
+            data_received = request.get_json()
+            cur = mysql.connection.cursor()
 
+            username = session['username']
+            query = "SELECT * FROM store WHERE storename = %s;"
+            cur.execute(query, (username,))
+            store_data = cur.fetchone()
+            cur.close()
+            
+            store_id = store_data[0]
+
+            try:
+                cur = mysql.connection.cursor()
+
+                insert_query = "INSERT INTO watchlist (storeId, watched_id, watched_type) VALUES (%s, %s, %s)"
+                print(data_received['watched_id'])
+                print(store_id)
+                print(data_received['watched_type'])
+                cur.execute(insert_query, (store_id,data_received['watched_id'],data_received['watched_type']))
+
+                mysql.connection.commit()
+                cur.close()
+                
+                return jsonify({"message": "Data inserted into the database successfully"})
+            except Exception as e:
+                # Handle the database insertion error
+                mysql.connection.rollback()
+                return jsonify({"error": str(e)})
+            
+@app.route('/remove_watchlist', methods=['POST'])
+def remove_watchlist():
+    if request.method == 'POST':
+        if 'username' in session:
+            data_received = request.get_json()
+            cur = mysql.connection.cursor()
+
+            username = session['username']
+            query = "SELECT * FROM store WHERE storename = %s;"
+            cur.execute(query, (username,))
+            store_data = cur.fetchone()
+            cur.close()
+            
+            store_id = store_data[0]
+
+            try:
+                cur = mysql.connection.cursor()
+
+                delete_query = "DELETE FROM watchlist WHERE storeId=%s AND watched_id=%s AND watched_type=%s"
+                print(data_received['watched_id'])
+                print(store_id)
+                print(data_received['watched_type'])
+                cur.execute(delete_query, (store_id,data_received['watched_id'],data_received['watched_type']))
+
+                mysql.connection.commit()
+                cur.close()
+                
+                return jsonify({"message": "Data deleted from the database successfully"})
+            except Exception as e:
+                # Handle the database deletion error
+                mysql.connection.rollback()
+                return jsonify({"error": str(e)})
+            
 if __name__ == "__main__":
     app.run(debug=True)
