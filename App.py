@@ -297,7 +297,7 @@ def settings():
 
         # Fetch all the rows
         all_accounts = cur.fetchall()
-        print(all_accounts)
+       
 
         # Close the cursor and the database connection
         cur.close()
@@ -325,9 +325,55 @@ def update_profile():
         # Redirect the user back to the profile page
         return render_template('success.html')
 
-@app.route('/cards', methods=["GET"])
-def cards():
-    return render_template('cards.html')
+@app.route('/change-password', methods=["POST"])
+def change_password():
+    if 'username' in session:
+        username = session['username']
+
+        cur = mysql.connection.cursor()
+
+        # Execute the SQL query to retrieve all data from the "account" table
+        query = "SELECT * FROM account where username = %s;"
+        cur.execute(query, (username,))  # Pass username as a tuple with a single element
+        # Fetch all the rows
+        all_accounts = cur.fetchall()
+        # Close the cursor and the database connection
+       
+
+       
+        
+        
+        current_password = request.form.get('currentPassword')
+        new_password = request.form.get('newPassword')
+        confirm_password = request.form.get('confirmPassword')
+
+        # Retrieve the user data from MongoDB
+        user_data = db.user.find_one({"username": username})
+
+        # Check if the current password matches the stored password
+        hashed_current_password = getHashed(current_password) # Use your existing getHashed method
+        if hashed_current_password == user_data["password"]:
+            # Hash the new password using your existing getHashed method
+            hashed_new_password = getHashed(new_password)
+
+            # Update the new password in MongoDB
+            db.user.update_one({"username": username}, {"$set": {"password": hashed_new_password}})
+
+            # Update the new password in SQL
+            update_query = "UPDATE account SET hashedpassword = %s, password = %s WHERE username = %s"
+            cur.execute(update_query, (hashed_new_password,hashed_new_password, username))
+            mysql.connection.commit()
+            cur.close()
+
+            # Pass a success message to the template
+            return render_template('success.html', message="Password changed successfully." )
+        else:
+            # Current password does not match, pass an error message to the template
+            return render_template('profile.html', error="Current password is incorrect." , user_data=all_accounts)
+    else:
+        # User is not logged in, redirect to the login page
+        return redirect(url_for('login_page'))
+
 
 # Charts Page
 
