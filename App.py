@@ -284,18 +284,46 @@ def blank():
     return render_template('blank.html')
 # Blank Page
 
-
 @app.route('/profile', methods=["GET"])
 def settings():
-    return render_template('profile.html')
+    if 'username' in session:
+        username = session['username']
 
+        cur = mysql.connection.cursor()
 
-@app.route('/buttons', methods=["GET"])
-def buttons():
-    return render_template("buttons.html")
+        # Execute the SQL query to retrieve all data from the "account" table
+        query = "SELECT * FROM account where username = %s;"
+        cur.execute(query, (username,))  # Pass username as a tuple with a single element
+
+        # Fetch all the rows
+        all_accounts = cur.fetchall()
+        print(all_accounts)
+
+        # Close the cursor and the database connection
+        cur.close()
+
+        return render_template('profile.html', username=username, user_data=all_accounts)
 
 # Cards Page
+@app.route('/update_profile', methods=["POST"])
+def update_profile():
+    if 'username' in session:
+        # Get the values from the submitted form
+        full_name = request.form.get('name')
+        email = request.form.get('email')
+        phone_number = request.form.get('phone')
+        address = request.form.get('address')
+        username = session['username']
 
+        # Update the profile in the database
+        cur = mysql.connection.cursor()
+        update_query = "UPDATE account SET fullname = %s, email = %s, phonenumber = %s, address = %s WHERE username = %s"
+        cur.execute(update_query, (full_name, email, phone_number, address, username))
+        mysql.connection.commit()
+        cur.close()
+
+        # Redirect the user back to the profile page
+        return render_template('success.html')
 
 @app.route('/cards', methods=["GET"])
 def cards():

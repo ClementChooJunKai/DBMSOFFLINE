@@ -24,22 +24,22 @@
           <h6 class="m-0 font-weight-bold text-primary">Account Information</h6>
         </div>
         <div class="card-body">
-          <form>
+          <form action="/update_profile" method="post">
             <div class="form-group">
               <label for="fullName">Full Name</label>
-              <input type="text" class="form-control" id="fullName" placeholder="Enter your full name" value="">
+              <input type="text" class="form-control" id="fullName"  name="full_name"placeholder="Enter your full name" value=" {{ user_data[0][4] }}">
             </div>
             <div class="form-group">
               <label for="email">Email Address</label>
-              <input type="email" class="form-control" id="email" placeholder="Enter your email address" value="">
+              <input type="email" class="form-control" id="email"   name="email"placeholder="Enter your email address" value="{{ user_data[0][3] }}">
             </div>
             <div class="form-group">
               <label for="phoneNumber">Phone Number</label>
-              <input type="tel" class="form-control" id="phoneNumber" placeholder="Enter your phone number" value="">
+              <input type="tel" class="form-control" id="phoneNumber" name="phone" placeholder="Enter your phone number" value="{{ user_data[0][5] }}">
             </div>
             <div class="form-group">
               <label for="address">Address</label>
-              <textarea class="form-control" id="address" rows="3" placeholder="Enter your address"></textarea>
+              <textarea class="form-control" id="address" rows="3"  name="address" placeholder="Enter your address"> {{ user_data[0][8] }}</textarea>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
           </form>
