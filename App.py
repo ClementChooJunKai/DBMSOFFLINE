@@ -304,6 +304,9 @@ def settings():
 
         return render_template('profile.html', username=username, user_data=all_accounts)
 
+
+
+
 # Cards Page
 @app.route('/update_profile', methods=["POST"])
 def update_profile():

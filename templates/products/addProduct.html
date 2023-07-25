@@ -1,0 +1,119 @@
+{% include 'admin-layout.html' %}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <h1 class="h3 mb-4 text-gray-800">Add Products</h1>
+          <!-- Delete Button -->
+   
+  <!-- Bootstrap Form -->
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-right mb-3">
+           
+           
+          </div>
+          <h5 class="card-title"></h5>
+
+
+    
+
+    
+          <form action="/addProductDB" method="POST">
+            <input type="hidden" name="id" value="{{data[0][0]}}">
+          
+            <input type="hidden" name="productSlug" id="productSlug" value="Nil">
+            <input type="hidden" name="productLikes" id="productlikes" value="0">
+            <input type="hidden" name="productrating" id="productrating" value="0">
+            <input type="hidden" name="productratingsamt" id="productratingsamt" value="0">
+            <form action="/addProductDB" method="POST">
+              <!-- Other hidden fields and input elements ... -->
+              <div class="form-group">
+                  <label for="ProductName">Product Name</label>
+                  <input type="text" class="form-control" id="ProductName" placeholder="Edit Product Name" name="ProductName" required value="">
+              </div>
+              <div class="form-group">
+                  <label for="ProductDescription">Product Description</label>
+                  <input type="text" class="form-control" id="ProductDescription" placeholder="Edit Product Description" name="ProductDescription" required value="">
+              </div>
+              <div class="form-group">
+                  <label for="ProductCategories">Product Categories</label>
+                  <select class="form-control" id="ProductCategories" name="ProductCategories" required>
+                      {% for category_item in category %}
+                          <option value="{{ category_item }}">{{ category_item }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+              <div class="form-group">
+                  <label for="shipFrom">Shipping From</label>
+                  <select class="form-control" id="shipFrom" name="shipFrom" required>
+                      {% for ship_item in shipfrom %}
+                          <option value="{{ ship_item }}">{{ ship_item }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+              <div class="form-group">
+                  <div class="row">
+                      <div class="col-md-6">
+                          <label for="sellingPrice">Selling Price</label>
+                          <input type="number" class="form-control" id="sellingPrice" placeholder="Edit Selling Price" name="sellingPrice" required value="">
+                      </div>
+                      <div class="col-md-6">
+                          <label for="discountedPrice">Discounted Price</label>
+                          <div class="input-group">
+                              <input type="text" class="form-control" id="discountedPrice" placeholder="Add Discounted Price" name="discountedPrice" value="" readonly required>
+                              <div class="input-group-prepend">
+                                  <input type="number" class="form-control" placeholder="Discount Percentage" name="discountPercentage" required>
+                                  <div class="input-group-append">
+                                      <span class="input-group-text">%</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <input type="hidden" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="0">
+              </div>
+              <div class="form-group">
+                  <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="freeShipping" name="freeShipping" value="Free shipping">
+                      <label class="form-check-label" for="freeShipping">Free Shipping</label>
+                  </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+              
+            
+        </div>
+      </div>
+   
+  </div>
+  <!-- End Bootstrap Form -->
+</div>
+<!-- /.container-fluid -->
+
+<!-- End of Main Content -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Bootstrap core JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}"></script>
+<script src="{{ url_for('static', filename='css/sb-admin-2.css') }}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+</body>
+
+</html>

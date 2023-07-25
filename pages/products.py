@@ -1,4 +1,5 @@
 
+import traceback
 from flask import Flask, Blueprint, render_template, request, redirect, url_for, session
 from model import *
 from utils import *
@@ -177,6 +178,96 @@ def delete_product():
         # Close the cursor
         cursor.close()
 
+@products_blueprint.route('/addProduct', methods=['GET'])
+def add_product():
+    if 'username' in session:
+        username = session['username']
+
+        cur = mysql.connection.cursor()
+
+        query = "SELECT storeId from store WHERE storename = %s;"
+        category_query = "select distinct category from dbms.product;"
+        shipfrom_query = "select distinct shipFrom from dbms.product;"
+
+        cur.execute(query, (username,))
+        fetchdata = cur.fetchall()
+
+        cur.execute(category_query)
+        category_data = cur.fetchall()
+        # Remove parentheses and commas from category values
+        category = [re.sub(r'[\(\),]', '', item[0]) for item in category_data]
+
+        cur.execute(shipfrom_query)
+        shipfrom_data = cur.fetchall()
+        # Remove parentheses and commas from shipfrom values
+        shipfrom = [re.sub(r'[\(\),]', '', item[0]) for item in shipfrom_data]
+
+        return render_template('products/addProduct.html', data=fetchdata, category=category, shipfrom=shipfrom)
+@products_blueprint.route('/addProductDB', methods=['POST'])
+def add_productDB():
+    
+        # Extract data from the form
+        product_name = request.form['ProductName']
+        product_description = request.form['ProductDescription']
+        product_categories = request.form['ProductCategories']
+        selling_price = request.form['sellingPrice']
+        storeID = request.form['id']
+        discount_percentage = request.form['discountPercentage']
+        discounted_price = (float(selling_price)*(100-float(discount_percentage)))/100
+        quantity = request.form['Quantity']
+        free_shipping = request.form.get('freeShipping')  # It will be 'Free shipping' if checked or None if not checked
+        shipFrom = request.form['shipFrom']
+        # Extract hidden fields
+        product_slug = request.form['productSlug']
+        product_likes = request.form['productLikes']
+        product_rating = request.form['productrating']
+        product_ratings_amt = request.form['productratingsamt']
+
+        # Create a new Product object with the extracted data
+        product = {
+            'ProductName': product_name,
+            'Productdesc': product_description,
+            'sellingprice': selling_price,
+            'discountedprice': discounted_price,
+            'category': product_categories,
+            'quantitysold': quantity,
+            'productlikes': product_likes,
+            'productratings': product_rating,
+            'productratingsamt': product_ratings_amt,
+            'shippingtype': 'Free shipping' if free_shipping else '',
+            'shipfrom': shipFrom,
+            'productSlug': product_slug,
+            'StoreId': storeID
+        }
+
+        # Execute the SQL query to insert the new product into the database
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        INSERT INTO product (
+            ProductName, Productdesc, sellingprice, discountedprice, category, quantitysold, 
+            productlikes, productratings, productratingsamt, shippingtype, shipfrom, 
+            productSlug, storeid
+        )
+        VALUES (
+            %(ProductName)s, %(Productdesc)s, %(sellingprice)s, %(discountedprice)s, %(category)s, 
+            %(quantitysold)s, %(productlikes)s, %(productratings)s, %(productratingsamt)s, 
+            %(shippingtype)s, %(shipfrom)s, %(productSlug)s, %(StoreId)s
+        )
+    """, product)
+
+        # Commit the changes to the database
+        mysql.connection.commit()
+
+        # Close the cursor
+        cur.close()
+
+        # Redirect the user to a success page or back to the add product page
+        # You can customize this URL to match your application's structure
+        return redirect(url_for('success'))  # Replace 'products.add_product_page' with the actual URL of the add product page
+
+   
+
+   
 
 @products_blueprint.route('/update_product', methods=['POST'])
 def update_product():
