@@ -8,11 +8,11 @@
    
   <!-- Bootstrap Form -->
   <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-8">
       <div class="card">
         <div class="card-body">
           <div class="text-right mb-3">
-           
+
            
           </div>
           <h5 class="card-title"></h5>
@@ -85,12 +85,33 @@
               </div>
               <button type="submit" class="btn btn-primary">Submit</button>
           </form>
-              
+
             
         </div>
       </div>
    
   </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-left mb-4">
+        <form id="aiInputForm" action="/generate_listing" method="POST">
+            <div class="form-group">
+              <label for="aiInput">Generate Product Name</label>
+              <input type="text" class="form-control" id="aiInput" name="aiInput" placeholder="Enter product you would like to list">
+            </div>
+            <div class="form-group">
+                  <label for="ProductCategories">Product Categories</label>
+                  <select class="form-control" id="ProductCategories" name="ProductCategories" required>
+                      {% for category_item in category %}
+                          <option value="{{ category_item }}">{{ category_item }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+            <button type="submit" class="btn btn-primary">Generate</button>
+            <p id="aiOutput"></p>
+        </form>
+    </div>
   <!-- End Bootstrap Form -->
 </div>
 <!-- /.container-fluid -->
@@ -113,7 +134,32 @@
 
 <!-- Custom scripts for all pages-->
 <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+<script>
+$(document).ready(function(){
+    $("#aiInputForm").on("submit", function(event){
+        event.preventDefault();
 
+        $.ajax({
+            url: '/generate_listing',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(data) {
+                // Log the entire data object to the console
+                console.log(data);
+                // Here you can handle the response from your server.
+                // For example, you can display it in an alert.
+            $("#aiOutput").html('Suggestion: ' + data.replace(/\n/g, '<br>'));
+
+            }
+        });
+    });
+});
+</script>
+<style>
+    #aiOutput {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
 </body>
-
 </html>
