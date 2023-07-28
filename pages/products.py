@@ -229,8 +229,8 @@ def add_product():
         cur = mysql.connection.cursor()
 
         query = "SELECT storeId from store WHERE storename = %s;"
-        category_query = "select distinct category from dbms.product;"
-        shipfrom_query = "select distinct shipFrom from dbms.product;"
+        category_query = "select distinct category from product;"
+        shipfrom_query = "select distinct shipFrom from product;"
 
         cur.execute(query, (username,))
         fetchdata = cur.fetchall()
