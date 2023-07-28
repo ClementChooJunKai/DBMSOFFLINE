@@ -12,7 +12,8 @@ def revenue_page():
 
         # Aggregate pipeline to calculate revenue
         revenue_pipeline = [
-            {
+            {   
+                #Join the 'store' collection with the 'storeId' field
                 '$lookup': {
                     'from': 'store',
                     'localField': 'storeId',
@@ -21,11 +22,13 @@ def revenue_page():
                 }
             },
             {
+                #Filter the documents based on the 'store.storeName' field matching the 'username'.
                 '$match': {
                     'store.storeName': username
                 }
             },
             {
+                #'1' means field included
                 '$project': {
                     '_id': 0,
                     'quantitySold': 1,
@@ -40,6 +43,7 @@ def revenue_page():
         # Aggregate pipeline to calculate total quantity sold
         quantity_sold_pipeline = [
             {
+                 #Join the 'store' collection with the 'storeId' field
                 '$lookup': {
                     'from': 'store',
                     'localField': 'storeId',
@@ -50,7 +54,7 @@ def revenue_page():
 
 
             {
-
+                 #Filter the documents based on the 'store.storeName' field matching the 'username'.
                 '$match': {
                     'store.storeName': username
                 }
@@ -64,6 +68,7 @@ def revenue_page():
                 '$limit': 10
             },
             {
+                 #'1' means field included
                 '$project': {
                     '_id': 0,
                     'productName': 1,
@@ -96,8 +101,9 @@ def revenue_page():
         '$unwind': '$store'
     },
     {
+        #Filter the documents based on the 'store.storeName' field matching the 'username'.
         '$match': {
-            'store.storeName': username  # Replace "store_username" with the actual store name
+            'store.storeName': username  
         }
     },
     {
@@ -114,6 +120,7 @@ def revenue_page():
         }
     },
     {
+         #'1' means field included
         '$project': {
             '_id': 0,
             'year': '$_id.year',
@@ -157,6 +164,7 @@ def revenue_page():
             '$unwind': '$store'
         },
         {
+            
             '$group': {
                 '_id': {
                     'year': {'$year': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
@@ -166,6 +174,7 @@ def revenue_page():
             }
         },
         {
+             #'1' means field included
             '$project': {
                 '_id': 0,
                 'year': '$_id.year',
