@@ -17,7 +17,7 @@
             <div class="card shadow mb-4" style="width: 100%">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Revenue Share of Each Product</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Share of Each Product ($)</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -57,13 +57,13 @@
 
                 <div class="form-group">
                     <label for="targetSales">Enter Cumulative Goal Target:</label>
-                    <input type="number" class="form-control" id="targetSales" min="1" max="1000000" name="targetSales"
+                    <input type="number" class="form-control" id="targetSales" min="1" max="1000000"   placeholder="Enter Goal Target (E.g. 100 000)" name="targetSales"
                         required>
                 </div>
                 <div class="form-group">
                     <label for="monthsToGoal">Select Number of Months to Reach Goal:</label>
                     <input type="number" class="form-control " id="monthsToGoal" min="1" max="12"
-                        placeholder="Select number of months to goal" name="monthsToGoal">
+                        placeholder="Select Number of Months to Goal (Max 12)" name="monthsToGoal" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
@@ -182,6 +182,7 @@
                     }
                 },
                 tooltips: {
+                    
                     backgroundColor: 'rgb(255,255,255)',
                     bodyFontColor: '#858796',
                     borderColor: '#dddfeb',
@@ -190,6 +191,7 @@
                     yPadding: 15,
                     displayColors: false,
                     caretPadding: 10,
+                    
                 },
                 cutoutPercentage: 80,
             },
@@ -234,6 +236,7 @@
                         },
 
                         ticks: {
+                            
                             callback: function (value) {
                                 if (value.length > 10) { // Adjust the character length as per your preference
                                     return value.substr(0, 10) + '...'; // Truncate the label and add ellipsis
@@ -264,6 +267,7 @@
                     yPadding: 15,
                     displayColors: false,
                     caretPadding: 10,
+                    
                 },
             },
 
@@ -275,7 +279,7 @@ var product_data = JSON.parse('{{ each_product_sold_data|tojson|safe }}');
 var months = [...new Set(product_data.map(item => item.month))];
 var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 var labeledMonths = months.map(month => monthNames[month - 1]);
-
+console.log(product_data);
 // Create an empty object to store datasets for each product
 var datasetsMap = {};
 
@@ -344,7 +348,6 @@ var myChart = new Chart(ctx, {
 
         var goal_data = JSON.parse('{{ goal_data|tojson|safe }}');
         var combinedData = JSON.parse('{{ combined_data|tojson|safe }}');
-        // var last_month = JSON.parse('{{ last_month|tojson|safe }}');
 
         // Sort the goal data by date
         var sortedData = Object.keys(goal_data)
@@ -495,7 +498,7 @@ var myChart = new Chart(ctx, {
             var color = '#';
             for (var i = 0; i < 6; i++) {
                 color += letters[Math.floor(Math.random() * 16)];
-            }
+            } 
             return color;
         }
 
