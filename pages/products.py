@@ -10,7 +10,8 @@ from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.agents.agent_types import AgentType
 from dotenv import load_dotenv
-from flask import jsonify
+
+from langchain import OpenAI, SQLDatabase, SQLDatabaseChain
 
 load_dotenv()
 
@@ -323,14 +324,17 @@ def add_productDB():
 
 @products_blueprint.route("/generate_listing", methods=["POST"])
 def generate_listing():
-    agent = create_csv_agent(
-        ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
-        "/Users/darrenlee/DBMS/p.csv",
+    db = SQLDatabase.from_uri("mysql+pymysql://root:root@localhost/dbms")
+    llm = OpenAI(
+        openai_api_key="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",
+        temperature=0,
         verbose=True,
-        agent_type=AgentType.OPENAI_FUNCTIONS,
     )
+    # Set up your OpenAI API credentials
+    db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
     product_categories = request.form["ProductCategories"]
     product = request.form["aiInput"]
+    select_table = "this query you only need to understand product data"
     bot = "you are a product name generator bot, given the data, desciption of a product and category of product"
     data = "the data is data of current listed products.it has total 14 columns but you only need productName(name of product),productDesc(product description),selling price(selling price of product),discounted price (price of product after discount) , category( category of product concatenated based on their sub category) , products sold( number of products sold), productslikes (number of users that like this product), product rating (overall rating of a product by past buyers max is 5/5) and productRatingsAmt( which is the number of users that rate this producct)"
     analysis = "what constitutes a good product is one that has a high rating,high quanitity sold and high product ratings amt"
@@ -343,8 +347,9 @@ def generate_listing():
         product,
         " will be a good product.give me 3 suggestions of names and a short write up on keywords i should include in my product name also give me a suggested description",
     )
-    output = bot, data, analysis, user_input
-    ai_output = agent.run(output)
+    designed_utput = "you should reply should be strictly this format.Based on the product name you provided here are the 3 names i suggest: .have a line break then new paragraph, these are the keywords you should include: have a line break next paragraph, these is a suggested decription. this is how you should structure your answer to reply"
+    output = select_table, bot, data, analysis, user_input, designed_utput
+    ai_output = db_chain.run(output)
     print("output of agent:", ai_output)
     return ai_output
 

@@ -148,7 +148,7 @@ $(document).ready(function(){
                 console.log(data);
                 // Here you can handle the response from your server.
                 // For example, you can display it in an alert.
-            $("#aiOutput").html('Suggestion: ' + data.replace(/\n/g, '<br>'));
+            $("#aiOutput").html(data.replace(/\n/g, '<br>'));
 
             }
         });
