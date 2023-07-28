@@ -71,7 +71,7 @@ def revenue_page():
                 }
             }
         ]
-    
+     # Aggregate pipeline to calculate number of products sold per month
         each_product_sold_pipeline = [
     {
         '$lookup': {
@@ -132,7 +132,7 @@ def revenue_page():
     }
 ]
 
-   
+   # Aggregate pipeline to calculate goal
     goal_pipeline = [
         {
             '$lookup': {
@@ -181,6 +181,7 @@ def revenue_page():
         }
     ]
 
+# Aggregate pipelines
     revenue_data = list(db.product.aggregate(revenue_pipeline))
     quantity_sold_data = list(db.product.aggregate(quantity_sold_pipeline))
     each_product_sold_data = list(

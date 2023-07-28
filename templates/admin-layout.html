@@ -45,7 +45,7 @@
       </li>
 
       <!-- Divider -->
-      <hr class="sidebar-divider">
+
 
       <!-- Heading -->
    
@@ -69,7 +69,6 @@
         </a>
         <div id="collapsePages1" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Login Screens:</h6>
             <a class="collapse-item" href="{{ url_for('products.products_page') }}">View Products</a>
             <a class="collapse-item" href="{{ url_for('products.add_product') }}">Add Products</a>
             <div class="collapse-divider"></div>
@@ -122,8 +121,10 @@
           <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
             <i class="fa fa-bars"></i>
           </button>
-          <h1 class="h3 mb-0 text-gray-800">Welcome {{username}}</h1>
-       
+          <h1 class="h3 mb-0" style="color: #4e73df;">
+            <strong>Welcome {{username}}</strong>
+        </h1>
+         
            
     
           </span>
