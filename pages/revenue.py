@@ -133,8 +133,6 @@ def revenue_page():
 ]
 
    
-
-
     goal_pipeline = [
         {
             '$lookup': {
@@ -188,8 +186,6 @@ def revenue_page():
     each_product_sold_data = list(
         db.order.aggregate(each_product_sold_pipeline))
     goal_data = list(db.order.aggregate(goal_pipeline))
-    for product_data in each_product_sold_data:
-        print(product_data)
     sales_per_month = 0
     last_month = 0
     months_to_goal = 0
