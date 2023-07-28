@@ -1,6 +1,6 @@
-# DBMSOFFLINE
+# INF2003 Database
 
-# Empowering E-commerce Sellers: A Comprehensive Database Solution
+# Empowering E-commerce Sellers: A Comprehensive Database Solution (Admin Arcade)
 
 ## Project Description
 
