@@ -122,10 +122,11 @@ def optimize(product_id):
     # Retrieve the avg price, max price, min price for products in the same category and with ratings between 1 and 5
     cur.execute(
         """
-        SELECT AVG(p.sellingprice) as avg_selling_price,
-            AVG(p.discountedprice) as avg_discounted_price,
-            MAX(p.sellingprice) as max_selling_price,
-            MIN(p.discountedprice) as min_discounted_price
+        SELECT 
+            ROUND(AVG(p.sellingprice), 2) AS avg_selling_price,
+            ROUND(AVG(p.discountedprice), 2) AS avg_discounted_price,
+            ROUND(MAX(p.sellingprice), 2) AS max_selling_price,
+            ROUND(MIN(p.discountedprice), 2) AS min_discounted_price
         FROM product p
         INNER JOIN (
             SELECT productid
