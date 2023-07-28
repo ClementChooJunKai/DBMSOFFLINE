@@ -1,8 +1,6 @@
-# INF2003 Database
-
 # Empowering E-commerce Sellers: A Comprehensive Database Solution (Admin Arcade)
 
-## Project Description
+## INF2003 Database Project Description
 
 Empowering E-commerce Sellers is a comprehensive database solution that aims to provide e-commerce sellers with a powerful platform to manage their products, stores, accounts, and user data. The system utilizes both SQL and MongoDB databases to efficiently store and manage different types of data. This project is developed by Group Number 2, comprising the following members:
 
