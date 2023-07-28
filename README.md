@@ -1,9 +1,5 @@
 # DBMSOFFLINE
 
-===============================================================================
-Project Title: Empowering E-commerce Sellers: A Comprehensive Database Solution
-===============================================================================
-
 # Empowering E-commerce Sellers: A Comprehensive Database Solution
 
 ## Project Description
@@ -65,6 +61,8 @@ Empowering E-commerce Sellers is a comprehensive database solution that aims to 
 
 6. Run the Program:
    Execute `app.py` to run the program.
+   If module not loaded on execute, change 'App.py' to 'app.py'
+
 
 7. Test Account Credentials:
    Use the following test account to explore the system:
