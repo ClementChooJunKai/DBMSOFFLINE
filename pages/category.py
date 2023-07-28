@@ -5,6 +5,15 @@ from utils import *
 
 
 category_blueprint = Blueprint('category', __name__)
+
+
+'''
+                                getcat Function - Get Categories and Products Page
+    Description:
+        The getcat function retrieves product categories and their associated subcategories from the database.
+        It specifically queries the "product" and "store" tables to gather relevant category information for products listed by the current user (retrieved from the session's username). 
+        The purpose of this function is to populate the "catProducts.html" template, which will display the main categories along with their respective subcategories.
+'''
 @category_blueprint.route('/getCatP')
 def getcat():
     cur = mysql.connection.cursor()
@@ -35,7 +44,14 @@ def getcat():
     return render_template('category/catProducts.html', main_categories=main_categories, sub_categories=sub_categories)
 
 
-
+'''
+                get_product_cat Function - Get Products by Category
+    Description:
+        The get_product_cat function is responsible for retrieving products from the "product" table based on selected main category and subcategories. 
+        It is triggered by a GET request with parameters "main_category" (the selected main category) and "sub_categories" (a list of selected subcategories).
+        This function enables dynamic filtering of products based on user-selected categories. 
+        It enhances the user experience by presenting relevant product listings based on their category preferences, allowing users to explore products more efficiently on the platform.
+'''
 @category_blueprint.route('/get-product-cat', methods=["GET"])
 def get_product_cat():
     main_category = request.args.get('main_category')
