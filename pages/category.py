@@ -45,7 +45,7 @@ def get_product_cat():
 
     # Construct the SQL query based on the selected main category and subcategories
     query = """
-        SELECT *
+        SELECT productId,productName,productSlug,productDesc,sellingPrice,discountedPrice,category,quantitySold,productLikes,productRatings,productRatingsAmt,shippingType,shipFrom
         FROM product
         WHERE category LIKE %s
     """

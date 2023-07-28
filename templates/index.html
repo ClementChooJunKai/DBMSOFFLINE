@@ -308,109 +308,7 @@
                             {% endfor %}
                           </tbody>
     
-                          <script>
-                            const starElements1 = document.querySelectorAll(".clickable-span1");
-    
-                            starElements1.forEach(function (starElements1) {
-                              starElements1.addEventListener("click", function (event) {
-                                if (this.classList.contains("uncheck")) {
-                                  this.classList.remove("uncheck");
-                                  this.classList.add("check");
-    
-                                  // Show the popup to the right of the cursor
-                                  showMessage("Added to watchlist!", "green");
-    
-                                  //Send to controller
-                                  const dataToSend = {
-                                    // Get the productId from the parent row
-                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                    watched_type: 'product'
-                                    // Add more key-value pairs as needed
-                                  };
-                                  // Make an AJAX request to the Flask server to add the product to the watchlist
-                                  fetch('/add_watchlist', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(dataToSend)
-                                  }).then(response => response.json())
-                                    .then(data => {
-                                      // Do something with the response if needed
-                                      console.log(data.message);
-                                    });
-    
-    
-                                } else if (this.classList.contains("check")) {
-                                  this.classList.remove("check");
-                                  this.classList.add("uncheck");
-                                  const dataToSend = {
-                                    // Get the productId from the parent row
-                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                    watched_type: 'product'
-    
-                                  };
-    
-                                  fetch('/remove_watchlist', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(dataToSend)
-                                  }).then(response => response.json())
-                                    .then(data => {
-                                      // Do something with the response if needed
-                                      console.log(data.message);
-                                    });
-                                  // Optionally, show a different message when star becomes unchecked
-                                  showMessage("Removed from watchlist!", "orange");
-                                }
-                              });
-                            });
-    
-                            function showMessage(message, outlineColour) {
-                              const popup = document.createElement("div");
-                              popup.className = "popup";
-                              popup.innerText = message;
-                              if (outlineColour == "green") {
-                                popup.style.border = `2px solid green`;
-                                popup.style.backgroundColor = '#aff0a1';
-                                popup.style.color = 'green';
-                              } else {
-                                popup.style.border = `2px solid red`; // Set the outline color
-                                popup.style.backgroundColor = '#f59398';
-                                popup.style.color = 'red';
-                              }
-                              document.body.appendChild(popup);
-    
-                              // Center the popup horizontally within the viewport
-                              popup.style.left = "50%";
-                              popup.style.transform = "translateX(-50%)";
-    
-                              // Position the popup at the top of the viewport
-                              popup.style.top = "10px";
-    
-                              setTimeout(function () {
-                                popup.remove();
-                              }, 750); // Remove the popup after 0.75 seconds
-                            }
-    
-                            function toggleTable(tableId) {
-                              const tableBody = document.querySelector(`#${tableId}-table`);
-                              const tableContainer = document.querySelector(`#${tableId}-table-container`);
-                              const toggleIcon = document.querySelector(`#${tableId}-toggle-icon`);
-    
-                              if (tableBody.style.display === 'none') {
-                                tableBody.style.display = '';
-                                tableContainer.classList.add('col-xl-12');
-                                toggleIcon.innerText = '-';
-                              } else {
-                                tableBody.style.display = 'none';
-                                tableContainer.classList.remove('col-xl-12');
-                                toggleIcon.innerText = '+';
-                              }
-                            }
-                          </script>
+                      
                         </table>
                       </div>
                       {% else %}
@@ -426,8 +324,7 @@
           </div>
     
 
-    <form method="POST" action="{{ url_for('home') }}" id="filterForm">
-      <!-- Your form inputs and elements go here -->
+   
 
 
 
@@ -499,7 +396,8 @@
         </div>
       </div>
 
-
+   
+   
       <!-- Content Row -->
       <div class="row">
 
@@ -546,6 +444,109 @@
 
 <!-- JavaScript code using Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const starElements1 = document.querySelectorAll(".clickable-span1");
+
+  starElements1.forEach(function (starElements1) {
+    starElements1.addEventListener("click", function (event) {
+      if (this.classList.contains("uncheck")) {
+        this.classList.remove("uncheck");
+        this.classList.add("check");
+
+        // Show the popup to the right of the cursor
+        showMessage("Added to watchlist!", "green");
+
+        //Send to controller
+        const dataToSend = {
+          // Get the productId from the parent row
+          watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+          watched_type: 'product'
+          // Add more key-value pairs as needed
+        };
+        // Make an AJAX request to the Flask server to add the product to the watchlist
+        fetch('/add_watchlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dataToSend)
+        }).then(response => response.json())
+          .then(data => {
+            // Do something with the response if needed
+            console.log(data.message);
+          });
+
+
+      } else if (this.classList.contains("check")) {
+        this.classList.remove("check");
+        this.classList.add("uncheck");
+        const dataToSend = {
+          // Get the productId from the parent row
+          watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+          watched_type: 'product'
+
+        };
+
+        fetch('/remove_watchlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dataToSend)
+        }).then(response => response.json())
+          .then(data => {
+            // Do something with the response if needed
+            console.log(data.message);
+          });
+        // Optionally, show a different message when star becomes unchecked
+        showMessage("Removed from watchlist!", "orange");
+      }
+    });
+  });
+
+  function showMessage(message, outlineColour) {
+    const popup = document.createElement("div");
+    popup.className = "popup";
+    popup.innerText = message;
+    if (outlineColour == "green") {
+      popup.style.border = `2px solid green`;
+      popup.style.backgroundColor = '#aff0a1';
+      popup.style.color = 'green';
+    } else {
+      popup.style.border = `2px solid red`; // Set the outline color
+      popup.style.backgroundColor = '#f59398';
+      popup.style.color = 'red';
+    }
+    document.body.appendChild(popup);
+
+    // Center the popup horizontally within the viewport
+    popup.style.left = "50%";
+    popup.style.transform = "translateX(-50%)";
+
+    // Position the popup at the top of the viewport
+    popup.style.top = "10px";
+
+    setTimeout(function () {
+      popup.remove();
+    }, 750); // Remove the popup after 0.75 seconds
+  }
+
+  function toggleTable(tableId) {
+    const tableBody = document.querySelector(`#${tableId}-table`);
+    const tableContainer = document.querySelector(`#${tableId}-table-container`);
+    const toggleIcon = document.querySelector(`#${tableId}-toggle-icon`);
+
+    if (tableBody.style.display === 'none' || tableBody.style.display === '') {
+      tableBody.style.display = 'table';
+      tableContainer.classList.add('col-xl-12');
+      toggleIcon.innerText = '-';
+    } else {
+      tableBody.style.display = 'none';
+      tableContainer.classList.remove('col-xl-12');
+      toggleIcon.innerText = '+';
+    }
+  }
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     // Assuming you have the 'earning' data available in the template

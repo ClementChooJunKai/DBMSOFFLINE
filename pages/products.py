@@ -109,7 +109,6 @@ def optimize(product_id):
             ORDER BY productratings DESC
             LIMIT 10
         ) AS subquery ON p.productid = subquery.productid
-        INNER JOIN store s ON p.storeid = s.storeid
         WHERE p.category LIKE %s;
     """,
             ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],
@@ -155,7 +154,7 @@ def optimize(product_id):
             ORDER BY productratings DESC
             LIMIT 10
         ) AS subquery ON p.productid = subquery.productid
-        INNER JOIN store s ON p.storeid = s.storeid
+      
         WHERE p.category LIKE %s;
     """,
         ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],

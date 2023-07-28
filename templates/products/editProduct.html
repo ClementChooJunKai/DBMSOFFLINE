@@ -38,12 +38,12 @@
               <div class="row">
                 <div class="col-md-6">
                   <label for="sellingPrice">Selling Price</label>
-                  <input type="text" class="form-control" id="sellingPrice" placeholder="Edit Selling Price" name="sellingPrice" value="{{ data[0][3] }}">
+                  <input type="number" class="form-control" id="sellingPrice" placeholder="Edit Selling Price" name="sellingPrice" value="{{ data[0][3] }}">
                 </div>
                 <div class="col-md-6">
                   <label for="discountedPrice">Discounted Price</label>
                   <div class="input-group">
-                    <input type="text" class="form-control" id="discountedPrice" placeholder="Edit Discounted Price" name="discountedPrice" value="{{ data[0][4] }}" readonly>
+                    <input type="number" class="form-control" id="discountedPrice" placeholder="Edit Discounted Price" name="discountedPrice" value="{{ data[0][4] }}" readonly>
                     <div class="input-group-prepend">
                       <input type="text" class="form-control" placeholder="Discount Percentage" name="discountPercentage" >
                       <div class="input-group-append">
@@ -55,8 +55,8 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="Quantity">Quantity</label>
-              <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][6] }}">
+              <label for="Quantity">Quantity Sold</label>
+              <input type="text" class="form-control" id="Quantity" name="Quantity" placeholder="Edit Quantity" value="{{ data[0][6] }}" readonly>
             </div>
             <div class="form-group">
               <div class="form-check">
