@@ -12,8 +12,8 @@ def revenue_page():
 
         # Aggregate pipeline to calculate revenue
         revenue_pipeline = [
-            {   
-                #Join the 'store' collection with the 'storeId' field
+            {
+                # Join the 'store' collection with the 'storeId' field
                 '$lookup': {
                     'from': 'store',
                     'localField': 'storeId',
@@ -22,13 +22,13 @@ def revenue_page():
                 }
             },
             {
-                #Filter the documents based on the 'store.storeName' field matching the 'username'.
+                # Filter the documents based on the 'store.storeName' field matching the 'username'.
                 '$match': {
                     'store.storeName': username
                 }
             },
             {
-                #'1' means field included
+                # '1' means field included
                 '$project': {
                     '_id': 0,
                     'quantitySold': 1,
@@ -43,7 +43,7 @@ def revenue_page():
         # Aggregate pipeline to calculate total quantity sold
         quantity_sold_pipeline = [
             {
-                 #Join the 'store' collection with the 'storeId' field
+                # Join the 'store' collection with the 'storeId' field
                 '$lookup': {
                     'from': 'store',
                     'localField': 'storeId',
@@ -54,7 +54,7 @@ def revenue_page():
 
 
             {
-                 #Filter the documents based on the 'store.storeName' field matching the 'username'.
+                # Filter the documents based on the 'store.storeName' field matching the 'username'.
                 '$match': {
                     'store.storeName': username
                 }
@@ -68,7 +68,7 @@ def revenue_page():
                 '$limit': 10
             },
             {
-                 #'1' means field included
+                # '1' means field included
                 '$project': {
                     '_id': 0,
                     'productName': 1,
@@ -78,66 +78,61 @@ def revenue_page():
         ]
      # Aggregate pipeline to calculate number of products sold per month
         each_product_sold_pipeline = [
-    {
-        '$lookup': {
-            'from': 'product',
-            'localField': 'ProductID',
-            'foreignField': 'productId',
-            'as': 'product'
-        }
-    },
-    {
-        '$unwind': '$product'
-    },
-    {
-        '$lookup': {
-            'from': 'store',
-            'localField': 'StoreID',
-            'foreignField': 'StoreID',
-            'as': 'store'
-        }
-    },
-    {
-        '$unwind': '$store'
-    },
-    {
-        #Filter the documents based on the 'store.storeName' field matching the 'username'.
-        '$match': {
-            'store.storeName': username  
-        }
-    },
-    {
-        '$group': {
-            '_id': {
-                
-                'year': {'$year': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
-                'month': {'$month': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
-                'productId': '$product.productId',
+            {
+                '$lookup': {
+                    'from': 'product',
+                    'localField': 'ProductID',
+                    'foreignField': 'productId',
+                    'as': 'product'
+                }
             },
-            'quantitySold': {'$sum': '$Quantity'},  
-            'productName': {'$first': '$product.productName'},
-            'storeName': {'$first': '$store.storeName'},
-        }
-    },
-    {
-         #'1' means field included
-        '$project': {
-            '_id': 0,
-            'year': '$_id.year',
-            'month': '$_id.month',
-            'productId': '$_id.productId',
-            'quantitySold': 1,
-            'productName': 1,
-            'storeName': 1,
-        }
-    },
-    {
-        '$sort': {
-            'year': 1,
-            'month': 1
-        }
-    }
-]
+            {
+                '$unwind': '$product'
+            },
+            {
+                '$lookup': {
+                    'from': 'store',
+                    'localField': 'StoreID',
+                    'foreignField': 'StoreID',
+                    'as': 'store'
+                }
+            },
+            {
+                '$unwind': '$store'
+            },
+
+            {
+                '$group': {
+                    '_id': {
+
+                        'year': {'$year': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
+                        'month': {'$month': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
+                        'productId': '$product.productId',
+                    },
+                    'quantitySold': {'$sum': '$Quantity'},
+                    'productName': {'$first': '$product.productName'},
+                    'storeName': {'$first': '$store.storeName'},
+                }
+            },
+            {
+                # '1' means field included
+                '$project': {
+                    '_id': 0,
+                    'year': '$_id.year',
+                    'month': '$_id.month',
+                    'productId': '$_id.productId',
+                    'quantitySold': 1,
+                    'productName': 1,
+                    'storeName': 1,
+                }
+            },
+            {
+                '$sort': {
+                    'year': 1,
+                    'month': 1
+                }
+            }
+        ]
 
    # Aggregate pipeline to calculate goal
     goal_pipeline = [
@@ -164,7 +159,7 @@ def revenue_page():
             '$unwind': '$store'
         },
         {
-            
+
             '$group': {
                 '_id': {
                     'year': {'$year': {'$dateFromString': {'dateString': '$Date', 'format': '%d/%m/%Y'}}},
@@ -174,7 +169,7 @@ def revenue_page():
             }
         },
         {
-             #'1' means field included
+            # '1' means field included
             '$project': {
                 '_id': 0,
                 'year': '$_id.year',
@@ -200,8 +195,6 @@ def revenue_page():
     last_month = 0
     months_to_goal = 0
     combined_data_str_keys = 0
-    
-    
 
     if request.method == 'POST':
         # Get the input data from the form
