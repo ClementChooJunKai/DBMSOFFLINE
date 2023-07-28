@@ -6,15 +6,9 @@ from helpers.database import *
 from helpers.hashpass import *
 from bson import json_util, ObjectId
 from datetime import datetime
-
+from utils import *
 import json
 
-
-# Configure MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'dbms'
 
 # Create MySQL instance
 mysql = MySQL(app)

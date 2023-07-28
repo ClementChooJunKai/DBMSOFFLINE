@@ -6,8 +6,8 @@
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-        class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+      <i class="fas fa-download fa-sm text-white-50" onclick="window.print()"> Generate Report</i></a>
   </div>
 
   <!-- Content Row -->
@@ -20,7 +20,7 @@
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
               <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Product Count</div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">{{data[0][5]}}</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{productcount}}</div>
             </div>
             <div class="col-auto">
               <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -96,6 +96,336 @@
   <div class="container-fluid">
 
 
+
+
+          <!-- Watchlist Row (Store & Products) -->
+          <div class="card shadow mb-4">
+
+            <div class="card-header" style="padding: 25px;">
+              <h6 class="m-0 font-weight-bold text-primary text-center" style="font-size: 20px;">Watchlists</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Watchlist Row Store -->
+                <div class="col-xl-12 col-lg-12 col-md-12">
+                  <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between">
+                      <h6 class="m-0 font-weight-bold text-primary text-center">Stores</h6>
+                      <button class="btn-toggle btn btn-outline-secondary" onclick="toggleTable('stores')"><span
+                          id="stores-toggle-icon">-</span></button>
+    
+                    </div>
+                    <div class="card-body col-xl-12 col-lg-12 col-md-12" id="stores-table-container">
+                      {% if watch_store %}
+                      <div class="table-responsive" id="stores-table">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                          <thead>
+                            <tr>
+                              <th>StoreID</th>
+                              <th>Store Name </th>
+                              <th>Store Joined Date</th>
+                              <th>Platform Type</th>
+                              <th>Compare</th>
+                              <th>Watchlist</th>
+    
+                            </tr>
+                          </thead>
+    
+                          <tbody>
+                            {% for row in watch_store %}
+                            <tr>
+                              {% for item in row[:-1] %}
+                              <td class="truncate-cell">{{ item }}</td>
+                              {% endfor %}
+                              <td><a href="/compare/{{ row[0] }}">Compare</a></td>
+                              <td><span
+                                  class="fa fa-star {% if row[-1] is not none %}check{% else %}uncheck{% endif %} clickable-span"></span>
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+    
+                          <style>
+                            .check {
+                              color: orange;
+                            }
+    
+                            .uncheck {
+                              color: grey;
+                            }
+    
+                            .clickable-span {
+                              cursor: pointer;
+                            }
+    
+                            .clickable-span1 {
+                              cursor: pointer;
+                            }
+    
+                            .popup {
+                              position: fixed;
+                              top: 0;
+                              left: 0;
+                              width: 300px;
+                              /* Set your desired width */
+                              height: 100px;
+                              /* Set your desired height */
+                              background-color: #f9f9f9;
+                              border-radius: 4px;
+                              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                              text-align: center;
+                              line-height: 100px;
+                              /* Adjust line-height to vertically center the text */
+                              font-size: 18px;
+                              z-index: 9999;
+                            }
+    
+                            .btn-toggle {
+                              align-self: flex-end;
+                            }
+                          </style>
+    
+                          <script>
+                            const starElements = document.querySelectorAll(".clickable-span");
+    
+                            starElements.forEach(function (starElement) {
+                              starElement.addEventListener("click", function (event) {
+                                if (this.classList.contains("uncheck")) {
+                                  this.classList.remove("uncheck");
+                                  this.classList.add("check");
+    
+                                  // Show the popup to the right of the cursor
+                                  showMessage("Added to watchlist!", "green");
+    
+                                  //Send to controller
+                                  const dataToSend = {
+                                    // Get the productId from the parent row
+                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                                    watched_type: 'store'
+                                    // Add more key-value pairs as needed
+                                  };
+                                  // Make an AJAX request to the Flask server to add the product to the watchlist
+                                  fetch('/add_watchlist', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(dataToSend)
+                                  }).then(response => response.json())
+                                    .then(data => {
+                                      // Do something with the response if needed
+                                      console.log(data.message);
+                                    });
+    
+    
+                                } else if (this.classList.contains("check")) {
+                                  this.classList.remove("check");
+                                  this.classList.add("uncheck");
+                                  const dataToSend = {
+                                    // Get the productId from the parent row
+                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                                    watched_type: 'store'
+                                    // Add more key-value pairs as needed
+                                  };
+    
+                                  fetch('/remove_watchlist', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(dataToSend)
+                                  }).then(response => response.json())
+                                    .then(data => {
+                                      // Do something with the response if needed
+                                      console.log(data.message);
+                                    });
+                                  // Optionally, show a different message when star becomes unchecked
+                                  showMessage("Removed from watchlist!", "orange");
+                                }
+                              });
+                            });
+    
+    
+                          </script>
+                        </table>
+                      </div>
+                      {% else %}
+                      <tr>
+                        <td colspan="16" class="text-center">No watched stores yet</td>
+                      </tr>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="row">
+                <div class="col-xl-12 col-lg-12 col-md-12">
+                  <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between">
+                      <h6 class="m-0 font-weight-bold text-primary text-center">Products</h6>
+                      <button class="btn-toggle btn btn-outline-secondary" onclick="toggleTable('products')"><span
+                          id="products-toggle-icon">-</span></button>
+                    </div>
+    
+                    <div class="card-body col-xl-12 col-lg-12 col-md-12" id="products-table-container">
+                      {% if watch_product %}
+                      <div class="table-responsive" id="products-table">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                          <thead>
+                            <tr>
+                              <th>Product ID</th>
+                              <th>Product Name</th>
+                              <th>Product Description</th>
+                              <th>Selling Price</th>
+                              <th>Discounted Price</th>
+                              <th>Category</th>
+                              <th>Quantity Sold</th>
+                              <th>Product Likes</th>
+                              <th>Product Rating</th>
+                              <th>Product Rating Amount</th>
+                              <th>Shipping Type</th>
+                              <th>Shipping From</th>
+                              <th>View</th>
+                              <th>Optimize</th>
+                              <th>Watchlist</th>
+                            </tr>
+                          </thead>
+    
+                          <tbody>
+                            {% for row in watch_product %}
+                            <tr>
+                              {% for item in row[:12] %}
+                              <td class="truncate-cell">{{ item }}</td>
+                              {% endfor %}
+                              <td><a href="/blank/{{ row[0] }}">Edit</a></td>
+                              <td><a href="/optimize/{{ row[0] }}">Optimize</a></td>
+    
+                              <td><span
+                                  class="fa fa-star {% if row[-1] %}check{% else %}uncheck{% endif %} clickable-span1"></span>
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+    
+                          <script>
+                            const starElements1 = document.querySelectorAll(".clickable-span1");
+    
+                            starElements1.forEach(function (starElements1) {
+                              starElements1.addEventListener("click", function (event) {
+                                if (this.classList.contains("uncheck")) {
+                                  this.classList.remove("uncheck");
+                                  this.classList.add("check");
+    
+                                  // Show the popup to the right of the cursor
+                                  showMessage("Added to watchlist!", "green");
+    
+                                  //Send to controller
+                                  const dataToSend = {
+                                    // Get the productId from the parent row
+                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                                    watched_type: 'product'
+                                    // Add more key-value pairs as needed
+                                  };
+                                  // Make an AJAX request to the Flask server to add the product to the watchlist
+                                  fetch('/add_watchlist', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(dataToSend)
+                                  }).then(response => response.json())
+                                    .then(data => {
+                                      // Do something with the response if needed
+                                      console.log(data.message);
+                                    });
+    
+    
+                                } else if (this.classList.contains("check")) {
+                                  this.classList.remove("check");
+                                  this.classList.add("uncheck");
+                                  const dataToSend = {
+                                    // Get the productId from the parent row
+                                    watched_id: this.closest("tr").querySelector("td:first-child").innerText,
+                                    watched_type: 'product'
+    
+                                  };
+    
+                                  fetch('/remove_watchlist', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(dataToSend)
+                                  }).then(response => response.json())
+                                    .then(data => {
+                                      // Do something with the response if needed
+                                      console.log(data.message);
+                                    });
+                                  // Optionally, show a different message when star becomes unchecked
+                                  showMessage("Removed from watchlist!", "orange");
+                                }
+                              });
+                            });
+    
+                            function showMessage(message, outlineColour) {
+                              const popup = document.createElement("div");
+                              popup.className = "popup";
+                              popup.innerText = message;
+                              if (outlineColour == "green") {
+                                popup.style.border = `2px solid green`;
+                                popup.style.backgroundColor = '#aff0a1';
+                                popup.style.color = 'green';
+                              } else {
+                                popup.style.border = `2px solid red`; // Set the outline color
+                                popup.style.backgroundColor = '#f59398';
+                                popup.style.color = 'red';
+                              }
+                              document.body.appendChild(popup);
+    
+                              // Center the popup horizontally within the viewport
+                              popup.style.left = "50%";
+                              popup.style.transform = "translateX(-50%)";
+    
+                              // Position the popup at the top of the viewport
+                              popup.style.top = "10px";
+    
+                              setTimeout(function () {
+                                popup.remove();
+                              }, 750); // Remove the popup after 0.75 seconds
+                            }
+    
+                            function toggleTable(tableId) {
+                              const tableBody = document.querySelector(`#${tableId}-table`);
+                              const tableContainer = document.querySelector(`#${tableId}-table-container`);
+                              const toggleIcon = document.querySelector(`#${tableId}-toggle-icon`);
+    
+                              if (tableBody.style.display === 'none') {
+                                tableBody.style.display = '';
+                                tableContainer.classList.add('col-xl-12');
+                                toggleIcon.innerText = '-';
+                              } else {
+                                tableBody.style.display = 'none';
+                                tableContainer.classList.remove('col-xl-12');
+                                toggleIcon.innerText = '+';
+                              }
+                            }
+                          </script>
+                        </table>
+                      </div>
+                      {% else %}
+                      <tr>
+                        <td colspan="16" class="text-center">No watched products yet</td>
+                      </tr>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+
     <form method="POST" action="{{ url_for('home') }}" id="filterForm">
       <!-- Your form inputs and elements go here -->
 
@@ -169,332 +499,6 @@
         </div>
       </div>
 
-      <!-- Watchlist Row (Store & Products) -->
-      <div class="card shadow mb-4">
-
-        <div class="card-header" style="padding: 25px;">
-          <h6 class="m-0 font-weight-bold text-primary text-center" style="font-size: 20px;">Watchlists</h6>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <!-- Watchlist Row Store -->
-            <div class="col-xl-12 col-lg-12 col-md-12">
-              <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary text-center">Stores</h6>
-                  <button class="btn-toggle btn btn-outline-secondary" onclick="toggleTable('stores')"><span
-                      id="stores-toggle-icon">-</span></button>
-
-                </div>
-                <div class="card-body col-xl-12 col-lg-12 col-md-12" id="stores-table-container">
-                  {% if watch_store %}
-                  <div class="table-responsive" id="stores-table">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                      <thead>
-                        <tr>
-                          <th>StoreID</th>
-                          <th>Store Name </th>
-                          <th>Store Joined Date</th>
-                          <th>Platform Type</th>
-                          <th>Compare</th>
-                          <th>Watchlist</th>
-
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {% for row in watch_store %}
-                        <tr>
-                          {% for item in row[:-1] %}
-                          <td class="truncate-cell">{{ item }}</td>
-                          {% endfor %}
-                          <td><a href="/compare/{{ row[0] }}">Compare</a></td>
-                          <td><span
-                              class="fa fa-star {% if row[-1] is not none %}check{% else %}uncheck{% endif %} clickable-span"></span>
-                          </td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-
-                      <style>
-                        .check {
-                          color: orange;
-                        }
-
-                        .uncheck {
-                          color: grey;
-                        }
-
-                        .clickable-span {
-                          cursor: pointer;
-                        }
-
-                        .clickable-span1 {
-                          cursor: pointer;
-                        }
-
-                        .popup {
-                          position: fixed;
-                          top: 0;
-                          left: 0;
-                          width: 300px;
-                          /* Set your desired width */
-                          height: 100px;
-                          /* Set your desired height */
-                          background-color: #f9f9f9;
-                          border-radius: 4px;
-                          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                          text-align: center;
-                          line-height: 100px;
-                          /* Adjust line-height to vertically center the text */
-                          font-size: 18px;
-                          z-index: 9999;
-                        }
-
-                        .btn-toggle {
-                          align-self: flex-end;
-                        }
-                      </style>
-
-                      <script>
-                        const starElements = document.querySelectorAll(".clickable-span");
-
-                        starElements.forEach(function (starElement) {
-                          starElement.addEventListener("click", function (event) {
-                            if (this.classList.contains("uncheck")) {
-                              this.classList.remove("uncheck");
-                              this.classList.add("check");
-
-                              // Show the popup to the right of the cursor
-                              showMessage("Added to watchlist!", "green");
-
-                              //Send to controller
-                              const dataToSend = {
-                                // Get the productId from the parent row
-                                watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                watched_type: 'store'
-                                // Add more key-value pairs as needed
-                              };
-                              // Make an AJAX request to the Flask server to add the product to the watchlist
-                              fetch('/add_watchlist', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(dataToSend)
-                              }).then(response => response.json())
-                                .then(data => {
-                                  // Do something with the response if needed
-                                  console.log(data.message);
-                                });
-
-
-                            } else if (this.classList.contains("check")) {
-                              this.classList.remove("check");
-                              this.classList.add("uncheck");
-                              const dataToSend = {
-                                // Get the productId from the parent row
-                                watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                watched_type: 'store'
-                                // Add more key-value pairs as needed
-                              };
-
-                              fetch('/remove_watchlist', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(dataToSend)
-                              }).then(response => response.json())
-                                .then(data => {
-                                  // Do something with the response if needed
-                                  console.log(data.message);
-                                });
-                              // Optionally, show a different message when star becomes unchecked
-                              showMessage("Removed from watchlist!", "orange");
-                            }
-                          });
-                        });
-
-
-                      </script>
-                    </table>
-                  </div>
-                  {% else %}
-                  <tr>
-                    <td colspan="16" class="text-center">No watched stores yet</td>
-                  </tr>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xl-12 col-lg-12 col-md-12">
-              <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary text-center">Products</h6>
-                  <button class="btn-toggle btn btn-outline-secondary" onclick="toggleTable('products')"><span
-                      id="products-toggle-icon">-</span></button>
-                </div>
-
-                <div class="card-body col-xl-12 col-lg-12 col-md-12" id="products-table-container">
-                  {% if watch_product %}
-                  <div class="table-responsive" id="products-table">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                      <thead>
-                        <tr>
-                          <th>Product ID</th>
-                          <th>Product Name</th>
-                          <th>Product Description</th>
-                          <th>Selling Price</th>
-                          <th>Discounted Price</th>
-                          <th>Category</th>
-                          <th>Quantity Sold</th>
-                          <th>Product Likes</th>
-                          <th>Product Rating</th>
-                          <th>Product Rating Amount</th>
-                          <th>Shipping Type</th>
-                          <th>Shipping From</th>
-                          <th>View</th>
-                          <th>Optimize</th>
-                          <th>Watchlist</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {% for row in watch_product %}
-                        <tr>
-                          {% for item in row[:12] %}
-                          <td class="truncate-cell">{{ item }}</td>
-                          {% endfor %}
-                          <td><a href="/blank/{{ row[0] }}">Edit</a></td>
-                          <td><a href="/optimize/{{ row[0] }}">Optimize</a></td>
-
-                          <td><span
-                              class="fa fa-star {% if row[-1] %}check{% else %}uncheck{% endif %} clickable-span1"></span>
-                          </td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-
-                      <script>
-                        const starElements1 = document.querySelectorAll(".clickable-span1");
-
-                        starElements1.forEach(function (starElements1) {
-                          starElements1.addEventListener("click", function (event) {
-                            if (this.classList.contains("uncheck")) {
-                              this.classList.remove("uncheck");
-                              this.classList.add("check");
-
-                              // Show the popup to the right of the cursor
-                              showMessage("Added to watchlist!", "green");
-
-                              //Send to controller
-                              const dataToSend = {
-                                // Get the productId from the parent row
-                                watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                watched_type: 'product'
-                                // Add more key-value pairs as needed
-                              };
-                              // Make an AJAX request to the Flask server to add the product to the watchlist
-                              fetch('/add_watchlist', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(dataToSend)
-                              }).then(response => response.json())
-                                .then(data => {
-                                  // Do something with the response if needed
-                                  console.log(data.message);
-                                });
-
-
-                            } else if (this.classList.contains("check")) {
-                              this.classList.remove("check");
-                              this.classList.add("uncheck");
-                              const dataToSend = {
-                                // Get the productId from the parent row
-                                watched_id: this.closest("tr").querySelector("td:first-child").innerText,
-                                watched_type: 'product'
-
-                              };
-
-                              fetch('/remove_watchlist', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(dataToSend)
-                              }).then(response => response.json())
-                                .then(data => {
-                                  // Do something with the response if needed
-                                  console.log(data.message);
-                                });
-                              // Optionally, show a different message when star becomes unchecked
-                              showMessage("Removed from watchlist!", "orange");
-                            }
-                          });
-                        });
-
-                        function showMessage(message, outlineColour) {
-                          const popup = document.createElement("div");
-                          popup.className = "popup";
-                          popup.innerText = message;
-                          if (outlineColour == "green") {
-                            popup.style.border = `2px solid green`;
-                            popup.style.backgroundColor = '#aff0a1';
-                            popup.style.color = 'green';
-                          } else {
-                            popup.style.border = `2px solid red`; // Set the outline color
-                            popup.style.backgroundColor = '#f59398';
-                            popup.style.color = 'red';
-                          }
-                          document.body.appendChild(popup);
-
-                          // Center the popup horizontally within the viewport
-                          popup.style.left = "50%";
-                          popup.style.transform = "translateX(-50%)";
-
-                          // Position the popup at the top of the viewport
-                          popup.style.top = "10px";
-
-                          setTimeout(function () {
-                            popup.remove();
-                          }, 750); // Remove the popup after 0.75 seconds
-                        }
-
-                        function toggleTable(tableId) {
-                          const tableBody = document.querySelector(`#${tableId}-table`);
-                          const tableContainer = document.querySelector(`#${tableId}-table-container`);
-                          const toggleIcon = document.querySelector(`#${tableId}-toggle-icon`);
-
-                          if (tableBody.style.display === 'none') {
-                            tableBody.style.display = '';
-                            tableContainer.classList.add('col-xl-12');
-                            toggleIcon.innerText = '-';
-                          } else {
-                            tableBody.style.display = 'none';
-                            tableContainer.classList.remove('col-xl-12');
-                            toggleIcon.innerText = '+';
-                          }
-                        }
-                      </script>
-                    </table>
-                  </div>
-                  {% else %}
-                  <tr>
-                    <td colspan="16" class="text-center">No watched products yet</td>
-                  </tr>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Content Row -->
       <div class="row">
@@ -502,145 +506,14 @@
         <!-- Content Column -->
         <div class="col-lg-6 mb-4">
 
-          <!-- Project Card Example -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Projects</h6>
-            </div>
-            <div class="card-body">
-              <h4 class="small font-weight-bold">Server Migration <span class="float-right">20%</span></h4>
-              <div class="progress mb-4">
-                <div class="progress-bar bg-danger" role="progressbar" style="width: 20%" aria-valuenow="20"
-                  aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-              <h4 class="small font-weight-bold">Sales Tracking <span class="float-right">40%</span></h4>
-              <div class="progress mb-4">
-                <div class="progress-bar bg-warning" role="progressbar" style="width: 40%" aria-valuenow="40"
-                  aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-              <h4 class="small font-weight-bold">Customer Database <span class="float-right">60%</span></h4>
-              <div class="progress mb-4">
-                <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0"
-                  aria-valuemax="100"></div>
-              </div>
-              <h4 class="small font-weight-bold">Payout Details <span class="float-right">80%</span></h4>
-              <div class="progress mb-4">
-                <div class="progress-bar bg-info" role="progressbar" style="width: 80%" aria-valuenow="80"
-                  aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-              <h4 class="small font-weight-bold">Account Setup <span class="float-right">Complete!</span></h4>
-              <div class="progress">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100"
-                  aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Color System -->
-          <div class="row">
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-primary text-white shadow">
-                <div class="card-body">
-                  Primary
-                  <div class="text-white-50 small">#4e73df</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-success text-white shadow">
-                <div class="card-body">
-                  Success
-                  <div class="text-white-50 small">#1cc88a</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-info text-white shadow">
-                <div class="card-body">
-                  Info
-                  <div class="text-white-50 small">#36b9cc</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-warning text-white shadow">
-                <div class="card-body">
-                  Warning
-                  <div class="text-white-50 small">#f6c23e</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-danger text-white shadow">
-                <div class="card-body">
-                  Danger
-                  <div class="text-white-50 small">#e74a3b</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-              <div class="card bg-secondary text-white shadow">
-                <div class="card-body">
-                  Secondary
-                  <div class="text-white-50 small">#858796</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="col-lg-6 mb-4">
-
-          <!-- Illustrations -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Illustrations</h6>
-            </div>
-            <div class="card-body">
-              <div class="text-center">
-                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
-                  src="static/img/undraw_posting_photo.svg" alt="">
-              </div>
-              <p>Add some quality, svg illustrations to your project courtesy of <a target="_blank" rel="nofollow"
-                  href="https://undraw.co/">unDraw</a>, a constantly updated collection of beautiful svg images that
-                you
-                can use completely free and without attribution!</p>
-              <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on unDraw &rarr;</a>
-            </div>
-          </div>
-
-          <!-- Approach -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
-            </div>
-            <div class="card-body">
-              <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce CSS bloat and poor
-                page performance. Custom CSS classes are used to create custom components and custom utility classes.
-              </p>
-              <p class="mb-0">Before working with this theme, you should become familiar with the Bootstrap framework,
-                especially the utility classes.</p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-  </div>
+         
   <!-- /.container-fluid -->
 
 </div>
 <!-- End of Main Content -->
 
 <!-- Footer -->
-<footer class="sticky-footer bg-white">
-  <div class="container my-auto">
-    <div class="copyright text-center my-auto">
-      <span>Copyright &copy; Your Website 2019</span>
-    </div>
-  </div>
-</footer>
+
 <!-- End of Footer -->
 
 </div>
