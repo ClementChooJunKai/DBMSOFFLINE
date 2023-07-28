@@ -78,28 +78,54 @@ def view_store(product_id):
 
 @products_blueprint.route("/optimizeProduct/<int:product_id>", methods=["GET"])
 def optimize(product_id):
+    # Get a cursor object to execute SQL queries
     cur = mysql.connection.cursor()
+
+    # Retrieve product data from the 'product' table and store it in 'fetchdata'
     cur.execute(
         "SELECT p.productid,p.ProductName,p.Productdesc,p.sellingprice,p.discountedprice,p.category,p.quantitysold,p.productlikes,p.productratings,p.productratingsamt,p.shippingtype,p.shipfrom FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;",
         (product_id,),
     )
     fetchdata = cur.fetchall()
+
+    # Retrieve the category data of the product
     cur.execute(
         "SELECT p.category FROM product p INNER JOIN store s ON p.storeid = s.storeid WHERE p.productid = %s;",
         (product_id,),
     )
     category_data = cur.fetchall()
 
+    # Split the categories and remove the first 3 values to get 'stripped_categories'
     categories = category_data[0][0].split(";")
-
-    # Skip the first value of stripped_categories
-    # Assume you have an array of stripped categories
     stripped_categories = [category.strip() for category in categories][3:]
 
+    # Retrieve pricing data for products in the same category and with ratings between 1 and 5
     if stripped_categories:
         cur.execute(
             """
-        SELECT p.sellingprice, p.discountedprice,p.productid
+            SELECT p.sellingprice, p.discountedprice, p.productid
+            FROM product p
+            INNER JOIN (
+                SELECT productid
+                FROM product
+                WHERE category LIKE %s
+                AND productratings BETWEEN 1 AND 5
+                ORDER BY productratings DESC
+                LIMIT 10
+            ) AS subquery ON p.productid = subquery.productid
+            WHERE p.category LIKE %s;
+            """,
+            ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],
+        )
+
+    pricing = cur.fetchall()
+    # Retrieve the avg price, max price, min price for products in the same category and with ratings between 1 and 5
+    cur.execute(
+        """
+        SELECT AVG(p.sellingprice) as avg_selling_price,
+            AVG(p.discountedprice) as avg_discounted_price,
+            MAX(p.sellingprice) as max_selling_price,
+            MIN(p.discountedprice) as min_discounted_price
         FROM product p
         INNER JOIN (
             SELECT productid
@@ -111,12 +137,12 @@ def optimize(product_id):
         ) AS subquery ON p.productid = subquery.productid
         WHERE p.category LIKE %s;
     """,
-            ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],
-        )
-    pricing = cur.fetchall()
+        ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],
+    )
+    avgprice = cur.fetchall()
 
+    # Calculate the average rating for each stripped category and get all ratings
     if stripped_categories:
-        # Calculate the average rating for each stripped category
         average_ratings = []
         all_ratings = []
         for category in stripped_categories:
@@ -128,8 +154,7 @@ def optimize(product_id):
                 WHERE p.category LIKE %s
                 AND p.productratings BETWEEN 1 AND 5
                 ORDER BY p.productratings DESC
-                
-            """,
+                """,
                 ["%" + category + "%"],
             )
             ratings = cur.fetchall()
@@ -141,7 +166,7 @@ def optimize(product_id):
             )
             average_ratings.append(average_rating)
 
-    # Fetch top-rated products and their product names
+    # Retrieve top-rated products and their product names in the same category and with ratings between 1 and 5
     cur.execute(
         """
         SELECT p.ProductName
@@ -154,14 +179,15 @@ def optimize(product_id):
             ORDER BY productratings DESC
             LIMIT 10
         ) AS subquery ON p.productid = subquery.productid
-      
         WHERE p.category LIKE %s;
-    """,
+        """,
         ["%" + stripped_categories[0] + "%", "%" + stripped_categories[0] + "%"],
     )
     top_rated_products = cur.fetchall()
 
     cur.close()
+
+    # Tokenize product names and create a list of product keywords
     product_keywords = []
     for product in top_rated_products:
         product_name = product[0]
@@ -176,7 +202,7 @@ def optimize(product_id):
     # Count the frequency of each keyword
     keyword_counts = Counter(flattened_keywords)
 
-    # Set the frequency threshold
+    # Set the frequency threshold for common keywords
     frequency_threshold = 2
 
     # Filter out keywords that don't meet the frequency threshold and exclude symbols/numbers
@@ -186,10 +212,12 @@ def optimize(product_id):
         if count >= frequency_threshold and re.match(r"^[a-zA-Z]+$", keyword)
     ]
 
+    # Render the 'optimizeProduct.html' template with the retrieved data and calculated values
     return render_template(
         "products/optimizeProduct.html",
         data=fetchdata,
         price=pricing,
+        avgprice=avgprice,
         keywords=filtered_common_keywords,
         ratingData=all_ratings,
         avgrating=round(average_rating, 2),

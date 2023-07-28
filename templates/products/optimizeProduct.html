@@ -62,16 +62,16 @@
         <h5 class="card-title">Statistics Summary</h5>
         <ul class="list-group">
           <li class="list-group-item">
-            Average Selling Price: <span id="averageSellingPrice"></span>
+            Average Selling Price: <span id="">{{avgprice[0][0]}}</span>
           </li>
           <li class="list-group-item">
-            Average Discounted Price: <span id="averageDiscountedPrice"></span>
+            Average Discounted Price: <span id=""> {{avgprice[0][1]}}</span>
           </li>
           <li class="list-group-item">
-            Highest Selling Price: <span id="highestSellingPrice"></span>
+            Highest Selling Price: <span id="">{{avgprice[0][2]}}</span>
           </li>
           <li class="list-group-item">
-            Lowest Discounted Price: <span id="lowestDiscountedPrice"></span>
+            Lowest Discounted Price: <span id="">{{avgprice[0][3]}}</span>
           </li>
           <li class="list-group-item">
             Most Used Word: <span id="mostUsedWord"></span>
@@ -82,7 +82,15 @@
         </ul>
       </div>
     </div>
-
+    <span id="averageSellingPrice" class="hidden"></span>
+    <span id="averageDiscountedPrice" class="hidden"></span>
+    <span id="highestSellingPrice" class="hidden"></span>
+    <span id="lowestDiscountedPrice" class="hidden"></span>
+    <style>
+      .hidden {
+          display: none;
+      }
+  </style>
   <!-- Chart Container -->
   <div class="row justify-content-center mt-4">
     <h2>Top 10 Prices</h2>
