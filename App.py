@@ -303,7 +303,7 @@ def generateotp():
 
         # Generate a random 6-digit password (OTP)
         otp = str(random.randint(100000, 999999))
-
+     
         # Get the recipient's email from the user's database record
         recipient_email = check["email"]
         print(recipient_email)
@@ -311,8 +311,8 @@ def generateotp():
         # Create a message containing the OTP and send it to the user's email
         msg = Message(
             "2FA Verification Code",
-            sender="your-email@example.com",  # Replace with your valid email address
-            recipients=[recipient_email],
+            sender="your-email@example.com", # Replace with your valid email address
+            recipients=[recipient_email]
         )
         msg.body = f"Your verification code is: {otp}"
         mail.send(msg)
@@ -411,33 +411,6 @@ def check_login_password():
 def logout():
     session.pop("username", None)  # remove user session
     return redirect(url_for("home"))  # redirect to home page with message
-
-
-# Forgot Password
-
-
-@app.route("/forgot-password", methods=["GET"])
-def forgot_password():
-    return render_template("forgot-password.html")
-
-
-# 404 Page
-
-
-@app.route("/404", methods=["GET"])
-def error_page():
-    return render_template("404.html")
-
-
-# Blank Page
-
-
-@app.route("/blank", methods=["GET"])
-def blank():
-    return render_template("blank.html")
-
-
-# Blank Page
 
 
 @app.route("/profile", methods=["GET"])

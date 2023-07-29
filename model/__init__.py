@@ -29,10 +29,9 @@ def checkloginpassword():
     username = request.form["username"]
     check = db.user.find_one({"username": username})
     password = request.form["password"]
-    #otp = request.form["otp2"]
+    otp = request.form["otp2"]
     hashpassword = getHashed(password)
-    if hashpassword == check["password"]:
-        # sendmail(subject="Login on Flask Admin Boilerplate", sender="Flask Admin Boilerplate", recipient=check["email"], body="You successfully logged in on Flask Admin Boilerplate")
+    if hashpassword == check["password"] and otp == session["otp"] :
         session["username"] = username
         return "correct"
     else:
