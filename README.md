@@ -56,8 +56,12 @@ Admin Arcade is a comprehensive database solution that aims to provide e-commerc
    - Uncomment the line `nltk.download()` in `app.py` (Line #############) for the first-time program execution. This installs NLTK used for optimization.
 
    - For subsequent executions, comment out the line `nltk.download()` in `app.py` (Line #############).
-
-6. Run the Program:
+     
+7. Update DB user namename,password and database for langchain implementation:
+   - in `products.py` line 414 => db = SQLDatabase.from_uri("mysql+pymysql://root:root@localhost/dbms")
+   - update to your appropriate username,password and database "username:password@localhost/database_name"
+ 
+8. Run the Program:
    Execute `app.py` to run the program.
    If module not loaded on execute, change 'App.py' to 'app.py'
 
