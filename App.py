@@ -28,6 +28,9 @@ app.config["MAIL_PASSWORD"] = "tfclioagsaftodjo"
 mail = Mail(app)
 mysql.init_app(app)
 
+# The line below (Line 33) performs installation of nltk library required for our program
+# The line of code is only required for first execution. Please comment the code (Line 33) out for subsequent executions.
+nltk.download()
 
 @app.route("/", methods=["GET", "POST"])
 def home():
