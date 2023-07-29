@@ -31,8 +31,11 @@ def checkloginpassword():
     password = request.form["password"]
     otp = request.form["otp2"]
     hashpassword = getHashed(password)
-    if hashpassword == check["password"] and otp == session["otp"] :
+    if hashpassword == check["password"] :
+        #if otp == check["otp"]: add this code in to check for OTP we have disabled this to allow for testing
+
         session["username"] = username
+        
         return "correct"
     else:
         return "wrong"

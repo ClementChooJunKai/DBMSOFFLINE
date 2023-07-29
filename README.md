@@ -68,6 +68,9 @@ Admin Arcade is a comprehensive database solution that aims to provide e-commerc
 
 7. Test Account Credentials:
    Use the following test account to explore the system:
-   - Username: ###################
-   - Password: ###################
+   - Username: adidassg
+   - Password: test
+
+   We have disabled the otp in order to allow easier testing with the test account
+   To enable Otp go to _init_.py line 35 to enable
 
