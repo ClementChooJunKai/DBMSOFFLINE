@@ -1,7 +1,7 @@
 Flask==1.1.2
 Flask_Mail==0.9.1
 Flask_MySQLdb==1.0.1
-langchain==0.0.245
+langchain==0.0.329
 nltk==3.8.1
 pandas==2.0.3
 pymongo==3.10.1
